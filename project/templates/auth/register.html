@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Регистрация{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/auth.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-box">
+        <div class="auth-header">
+            <div class="auth-title">Регистрация</div>
+        </div>
+
+        <div class="auth-card">
+            <form method="POST" action="{{ url_for('auth.register') }}">
+
+                <div class="section-label">Лична информация</div>
+
+                <div class="form-group">
+                    <label for="full_name">Пълно име*</label>
+                    <input type="text" id="full_name" name="full_name" placeholder="Иван Иванов" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="identifier">ЕГН / ЕИК*</label>
+                        <input type="text" id="identifier" name="identifier" placeholder="0000000000"  maxlength="13" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Телефон*</label>
+                        <input type="text" id="phone" name="phone" placeholder="+359 88 000 0000" minlength="10" maxlength="15" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="is_company" name="is_company" value="1">
+                        <label for="is_company">Регистрирам се като фирма (ЕИК)</label>
+                    </div>
+                </div>
+
+                <div class="section-label">Аккаунт</div>
+
+                <div class="form-group">
+                    <label for="email">Имейл адрес*</label>
+                    <input type="email" id="email" name="email" placeholder="example@mail.bg" required autocomplete="email">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password">Парола*</label>
+                        <input type="password" id="password" name="password" placeholder="••••••••" minlength="8" required autocomplete="new-password">
+                    </div>
+                    <div class="form-group">
+                        <label for="password2">Потвърди паролата</label>
+                        <input type="password" id="password2" name="password2" placeholder="••••••••" minlength="8" required autocomplete="new-password">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-submit">Създай акаунт →</button>
+            </form>
+
+            <div class="divider"></div>
+
+            <div class="auth-footer">Вече имате акаунт? <a href="{{ url_for('auth.login') }}">Влезте тук</a></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const p1 = document.getElementById('password').value;
+        const p2 = document.getElementById('password2').value;
+        if (p1 !== p2) {
+            e.preventDefault();
+            alert('Паролите не съвпадат!');
+        }
+    });
+</script>
+{% endblock %}
