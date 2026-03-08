@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ИАРА{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<nav>
+    <a href="{{ url_for('index') }}" class="nav-brand">
+        <div class="nav-brand-icon"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="logo IARA"></div>
+        <div>
+            <div class="nav-brand-text">ИАРА</div>
+            <div class="nav-brand-sub">Рибарство и Аквакултури</div>
+        </div>
+    </a>
+
+    
+    <div class="nav-links">
+            <a href="{{ url_for('index') }}">Начало</a>
+    {% if user %}
+            {% if user.role == 'user' %}
+            <a href="/vessels">Мои кораби</a>
+            {% endif %}
+            {% if user.role == 'admin' %}
+                <a href="/admin">Админ панел</a>
+            {% endif %}
+    </div>
+        <div class="nav-user">
+            <a href="/profile">{{ user.full_name }}</a>
+            <a href="{{ url_for('auth.logout') }}" class="btn-nav-logout">Изход</a>
+        </div>
+    {% else %}
+        <div class="nav-links">
+            <a href="{{ url_for('auth.login') }}">Вход</a>
+            <a href="{{ url_for('auth.register') }}">Регистрация</a>
+        </div>
+    {% endif %}
+</nav>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="flashes">
+            {% for msg in messages %}
+                <div class="flash">{{ msg }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<footer>
+    <span>Copyright © 2026 Изпълнителна агенция по рибарство и аквакултури.</span>
+    <span><a href="http://iara.government.bg">iara.government.bg</a></span>
+</footer>
+
+</body>
+</html>
