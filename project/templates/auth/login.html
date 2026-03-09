@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}ИАРА — Вход{% endblock %}
+{% block title %}ИАРА - Вход{% endblock %}
 
 {% block extra_css %}
 <link href="{{ url_for('static', filename='css/auth.css') }}" rel="stylesheet">
@@ -7,7 +7,7 @@
 
 {% block content %}
 <div class="auth-wrap">
-    <div class="auth-box">
+    <div class="auth-container">
         <div class="auth-header">
             <div class="auth-title">Вход в системата</div>
         </div>
@@ -21,7 +21,7 @@
 
                 <div class="form-group">
                     <label for="password">Парола</label>
-                    <input type="password" id="password" name="password" placeholder="••••••••" required auto complete="current-password">
+                    <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-submit">Влезте →</button>

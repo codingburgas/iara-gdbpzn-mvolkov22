@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Добави кораб{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/vessels.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div>
+    <div>
+        <a href="{{ url_for('vessels.list_vessels') }}">Назад</a>
+        <h1>Добави кораб</h1>
+    </div>
+
+    <div class="card">
+        <form method="POST" action="{{ url_for('vessels.add_vessel') }}">
+
+            <div class="form-group">
+                <label for="cfr_number">CFR номер</label>
+                <input type="text" id="cfr_number" name="cfr_number" placeholder="BGR000001234" required>
+            </div>
+
+            <div class="form-group">
+                <label for="marking">Маркировка</label>
+                <input type="text" id="marking" name="marking" placeholder="VAR-0042" required>
+            </div>
+
+            <div class="form-group">
+                <label for="call_sign">Позивна</label>
+                <input type="text" id="call_sign" name="call_sign" placeholder="LZAB">
+            </div>
+
+            <div class="form-group">
+                <label for="length">Дължина (м)</label>
+                <input type="number" id="length" name="length" placeholder="18.50" step="0.01" min="0.1" required>
+            </div>
+
+            <div class="form-group">
+                <label for="width">Ширина (м)</label>
+                <input type="number" id="width" name="width" placeholder="5.20" step="0.01" min="0">
+            </div>
+
+            <div class="form-group">
+                <label for="draft">Газене (м)</label>
+                <input type="number" id="draft" name="draft" placeholder="2.10" step="0.01" min="0">
+            </div>
+
+            <div class="form-group">
+                <label for="gross_tonnage">Тонаж (GT)</label>
+                <input type="number" id="gross_tonnage" name="gross_tonnage" placeholder="45.0" step="0.01" min="0">
+            </div>
+
+            <div class="form-group">
+                <label for="engine_power">Мощност (kW)</label>
+                <input type="number" id="engine_power" name="engine_power" placeholder="220" step="0.1" min="0">
+            </div>
+
+            <div class="form-group">
+                <label for="captain_name">Капитан</label>
+                <input type="text" id="captain_name" name="captain_name" placeholder="Иван Иванов">
+            </div>
+
+            <div class="form-group">
+                <label for="captain_license">Лиценз на капитана</label>
+                <input type="text" id="captain_license" name="captain_license" placeholder="LIC-00001">
+            </div>
+
+            <div class="form-group">
+                <label for="fuel_type">Гориво</label>
+                <select id="fuel_type" name="fuel_type" placeholder="Изберете" required>
+                    <option value="diesel">Дизел</option>
+                    <option value="petrol">Бензин</option>
+                    <option value="electric">Електрически</option>
+                    <option value="hybrid">Хибриден</option>
+                </select>
+            </div>
+
+            <button type="submit">Регистрирай кораба</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

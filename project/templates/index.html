@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}ИАРА — Информационна система{% endblock %}
+{% block title %}ИАРА - Информационна система{% endblock %}
 
 {% block extra_css %}
 <link href="{{ url_for('static', filename='css/index.css') }}" rel="stylesheet">
@@ -11,9 +11,10 @@
         <h1>Добре дошли в ИАРА</h1>
         <p>Изпълнителна агенция по рибарство и аквакултури</p>
         {% if not user %}
-        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Регистрирайте се</a>
+        <a href="{{ url_for('auth.register') }}">Регистрирайте се</a>
         {% elif user.role == 'user' %}
-        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">Към системата</a>
+        <a href="{{ url_for('index') }}">Към системата</a>
         {% endif %}
     </div>
+</div>
 {% endblock %}

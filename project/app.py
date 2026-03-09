@@ -1,6 +1,7 @@
 from flask import Flask, redirect, render_template, session, request, url_for, flash, g
 from models.models import db, UserModel as User
 from routes.auth import authApp as authBp
+from routes.vessels import vesselsApp as vesselsBp
 from database import config
 
 app = Flask(__name__)
@@ -13,6 +14,7 @@ with app.app_context():
 
 # register blueprints
 app.register_blueprint(authBp, url_prefix='/auth')
+app.register_blueprint(vesselsBp, url_prefix='/vessels')
 
 
 # limit access to certain routes based on authentication and role

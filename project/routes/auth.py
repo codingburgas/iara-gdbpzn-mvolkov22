@@ -7,11 +7,11 @@ authApp = Blueprint('auth', __name__)
 @authApp.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        email      = request.form['email']
-        password   = request.form['password']
-        full_name  = request.form['full_name']
+        email = request.form['email']
+        password = request.form['password']
+        full_name = request.form['full_name']
         identifier = request.form['identifier']
-        phone      = request.form.get('phone')
+        phone = request.form.get('phone')
         is_company = bool(request.form.get('is_company', False))
 
         if UserModel.query.filter_by(email=email).first():
@@ -24,10 +24,10 @@ def register():
 
         try:
             user = UserModel(
-                email      = email,
-                full_name  = full_name,
+                email = email,
+                full_name = full_name,
                 identifier = identifier,
-                phone      = phone,
+                phone = phone,
                 is_company = is_company,
             )
             user.set_password(password)
@@ -35,7 +35,7 @@ def register():
             db.session.commit()
 
             session['user_id'] = user.id
-            session['role']    = user.role
+            session['role'] = user.role
             return redirect(url_for('index'))
 
         except ValueError as e:
@@ -48,7 +48,7 @@ def register():
 @authApp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email    = request.form['email']
+        email = request.form['email']
         password = request.form['password']
 
         user = UserModel.query.filter_by(email=email).first()
@@ -58,7 +58,7 @@ def login():
             return redirect(url_for('auth.login'))
 
         session['user_id'] = user.id
-        session['role']    = user.role
+        session['role'] = user.role
         return redirect(url_for('index'))
 
     return render_template('auth/login.html', user=g.user)
@@ -67,5 +67,5 @@ def login():
 @authApp.route('/logout')
 def logout():
     session['user_id'] = None
-    session['role']    = None
+    session['role'] = None
     return redirect(url_for('auth.login'))
