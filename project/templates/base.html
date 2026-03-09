@@ -11,33 +11,35 @@
 
 <nav>
     <a href="{{ url_for('index') }}" class="nav-brand">
-        <div class="nav-brand-icon"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="logo IARA"></div>
+        <div class="nav-brand-icon">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="logo IARA">
+        </div>
         <div>
             <div class="nav-brand-text">ИАРА</div>
             <div class="nav-brand-sub">Рибарство и Аквакултури</div>
         </div>
     </a>
 
-    
     <div class="nav-links">
-            <a href="{{ url_for('index') }}">Начало</a>
-    {% if user %}
+        <a href="{{ url_for('index') }}">Начало</a>
+        {% if user %}
             {% if user.role == 'user' %}
-            <a href="/vessels">Мои кораби</a>
+                <a href="/vessels">Мои кораби</a>
             {% endif %}
             {% if user.role == 'admin' %}
                 <a href="/admin">Админ панел</a>
             {% endif %}
-    </div>
-        <div class="nav-user">
-            <a href="/profile">{{ user.full_name }}</a>
-            <a href="{{ url_for('auth.logout') }}" class="btn-nav-logout">Изход</a>
-        </div>
-    {% else %}
-        <div class="nav-links">
+        {% else %}
             <a href="{{ url_for('auth.login') }}">Вход</a>
             <a href="{{ url_for('auth.register') }}">Регистрация</a>
-        </div>
+        {% endif %}
+    </div>
+
+    {% if user %}
+    <div class="nav-user">
+        <a href="/profile">{{ user.full_name }}</a>
+        <a href="{{ url_for('auth.logout') }}" class="btn-logout">Изход</a>
+    </div>
     {% endif %}
 </nav>
 

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Моите кораби{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/vessels.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="vessels-list">
+    <div class="vessels-header">
+        <h1>Моите кораби</h1>
+        <a href="{{ url_for('vessels.add_vessel') }}">+ Добави кораб</a>
+    </div>
+
+    {% if vessels %}
+    <table>
+        <thead>
+            <tr>
+                <th>CFR номер</th>
+                <th>Маркировка</th>
+                <th>Позивна</th>
+                <th>Дължина</th>
+                <th>Статус</th>
+                <th>Детайли</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vessel in vessels %}
+            <tr>
+                <td>{{ vessel.cfr_number }}</td>
+                <td>{{ vessel.marking }}</td>
+                <td>{{ vessel.call_sign or '—' }}</td>
+                <td>{{ vessel.length }} м</td>
+                <td><span class="status status-{{ vessel.status }}">{{ vessel.status }}</span></td>
+                <td><a href="{{ url_for('vessels.vessel_detail', vessel_id=vessel.id) }}">Преглед</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Все още нямате добавени кораби. Кликнете на "Добави нов кораб", за да започнете.</p>
+    {% endif %}
+</div>
+{% endblock %}
