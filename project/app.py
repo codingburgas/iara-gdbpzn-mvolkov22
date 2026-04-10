@@ -1,6 +1,7 @@
 from flask import Flask, redirect, render_template, session, request, url_for, flash, g
 from models.models import db, UserModel as User
 from routes.auth import authApp as authBp
+from routes.admin import adminApp as adminBp
 from routes.vessels import vesselsApp as vesselsBp
 from database import config
 
@@ -14,6 +15,7 @@ with app.app_context():
 
 # register blueprints
 app.register_blueprint(authBp, url_prefix='/auth')
+app.register_blueprint(adminBp, url_prefix='/admin')
 app.register_blueprint(vesselsBp, url_prefix='/vessels')
 
 

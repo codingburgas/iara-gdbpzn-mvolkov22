@@ -57,7 +57,7 @@
                         <input type="password" id="password2" name="password2" placeholder="••••••••" minlength="8" required autocomplete="new-password">
                     </div>
                 </div>
-
+                <div id="pass-error" class="flashes" style="display: none;">Passwords do not match!</div>
                 <button type="submit" class="btn btn-primary btn-submit">Създай акаунт →</button>
             </form>
 
@@ -70,12 +70,18 @@
 
 <script>
     document.querySelector('form').addEventListener('submit', function(e) {
-        const p1 = document.getElementById('password').value;
-        const p2 = document.getElementById('password2').value;
-        if (p1 !== p2) {
+        const pass1 = document.getElementById('password').value;
+        const pass2 = document.getElementById('password2').value;
+        if (pass1 !== pass2) {
             e.preventDefault();
-            alert('Паролите не съвпадат!');
+            const err = document.getElementById('pass-error');
+            err.style.display = 'block';
+            err.style.opacity = '1';
+            setTimeout(function() {
+                err.style.opacity = '0';
+                setTimeout(() => err.style.display = 'none', 500);
+            }, 5000);
         }
-    });
+    })
 </script>
 {% endblock %}

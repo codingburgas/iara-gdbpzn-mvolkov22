@@ -3,4 +3,5 @@ Flask-SQLAlchemy==3.0.3
 Flask-MySQLdb==2.0.0
 python-dotenv==0.21.0
 Werkzeug==2.3.4
+cryptography==46.0.7
 pymysql==1.1.2

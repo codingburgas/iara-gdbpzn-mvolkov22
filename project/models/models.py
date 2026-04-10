@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 db = SQLAlchemy()
 
 class UserModel(db.Model):
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
@@ -41,7 +42,7 @@ class VesselModel(db.Model):
     engine_power = db.Column(db.Float)
     fuel_type = db.Column(db.Enum('diesel', 'petrol', 'electric', 'hybrid'))
 
-    status = db.Column(db.Enum('pending', 'approved', 'rejected'), default='pending', nullable=False)
+    status = db.Column(db.Enum('pending', 'approved', 'rejected', 'suspended', 'revoked'), default='pending', nullable=False)
     admin_note = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=db.func.now())
 

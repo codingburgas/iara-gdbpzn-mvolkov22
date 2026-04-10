@@ -62,5 +62,15 @@
     <span><a href="http://iara.government.bg">iara.government.bg</a></span>
 </footer>
 
+
+<script>
+    setTimeout(function() {
+        const flashes = document.querySelector('.flashes');
+        if (flashes) {
+            flashes.style.opacity = '0';
+            setTimeout(() => flashes.style.display = 'none', 500);
+        }
+    }, 5000);
+</script>
 </body>
 </html>
