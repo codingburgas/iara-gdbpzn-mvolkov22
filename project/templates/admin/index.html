@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Админ панел{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="admin-wrap">
+
+    <h1 style="margin-bottom:1.5rem;">Админ панел</h1>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number pending">{{ pending|length }}</div>
+            <div class="stat-label">Чакащи кораби</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number approved">{{ stats.approved }}</div>
+            <div class="stat-label">Одобрени кораби</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number rejected">{{ stats.rejected }}</div>
+            <div class="stat-label">Отхвърлени</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" style="color:#fca5a5;">{{ stats.revoked }}</div>
+            <div class="stat-label">Блокирани кораби</div>
+        </div>
+    </div>
+
+    <h2 style="margin-bottom:1rem; font-size:1.1rem;">
+        Чакащи одобрение
+        {% if pending %}
+        <span class="tab-badge" style="margin-left:.5rem;">{{ pending|length }}</span>
+        {% endif %}
+    </h2>
+
+    {% if pending %}
+    <table>
+        <thead>
+            <tr>
+                <th>CFR номер</th>
+                <th>Маркировка</th>
+                <th>Собственик</th>
+                <th>Дължина</th>
+                <th>Дата</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vessel in pending %}
+            <tr>
+                <td>{{ vessel.cfr_number }}</td>
+                <td>{{ vessel.marking }}</td>
+                <td>{{ vessel.owner.full_name }}</td>
+                <td>{{ vessel.length }} м</td>
+                <td>{{ vessel.created_at.strftime('%d.%m.%Y') }}</td>
+                <td class="actions-cell">
+                    <form method="POST"
+                          action="{{ url_for('adminBp.approve', vessel_id=vessel.id) }}"
+                          style="display:inline;">
+                        <button type="submit" class="btn-action btn-approve" onclick="return confirm('Одобри {{ vessel.cfr_number }}?')">Одобри</button>
+                    </form>
+
+                    <button class="btn-action btn-reject"onclick="toggleNote('reject-{{ vessel.id }}')">Откажи</button>
+
+                    <div id="reject-{{ vessel.id }}" class="note-form" style="display:none;">
+                        <form method="POST"
+                              action="{{ url_for('adminBp.reject', vessel_id=vessel.id) }}">
+                            <input type="text" name="note" placeholder="Причина за отказ" required>
+                            <button type="submit" class="btn-action btn-reject">Потвърди</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">Няма чакащи заявки</div>
+    {% endif %}
+
+</div>
+
+<script>
+function toggleNote(id) {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+{% endblock %}

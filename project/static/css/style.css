@@ -69,12 +69,28 @@ nav a.active {
     position: fixed;
     top: 10%;
     left: 20px;
-    padding: 10px 20px;
-    border-radius: 5px;
     z-index: 1000;
-    background-color: #ffcccc;
-    color: #990000;
     transition: opacity 0.5s ease-out;
+    min-width: 250px;
+}
+
+.flash {
+    padding: .7rem 1rem;
+    border-radius: 5px;
+    margin-bottom: .5rem;
+    font-size: .85rem;
+}
+
+.flash-error, .flash-message {
+    background-color: #ffcccc;
+    border-left: 3px solid #e05252;
+    color: #990000;
+}
+
+.flash-success {
+    background-color: #ccffcc;
+    border-left: 3px solid #10b981;
+    color: #006600;
 }
 
 main {

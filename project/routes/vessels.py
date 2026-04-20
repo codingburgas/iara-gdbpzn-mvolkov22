@@ -37,7 +37,7 @@ def add_vessel():
         db.session.add(vessel)
         db.session.commit()
 
-        flash('Vessel registered successfully. Waiting for admin approval.')
+        flash('Vessel registered successfully. Waiting for admin approval.', 'success')
         return redirect(url_for('vessels.list_vessels'))
 
     return render_template('vessels/add.html', user=g.user)
