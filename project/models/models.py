@@ -67,3 +67,15 @@ class PermitModel(db.Model):
     revoke_reason = db.Column(db.Text)
 
     created_at = db.Column(db.DateTime, default=db.func.now())
+
+class AdminLog(db.Model):
+    table_name = 'admin_log'
+ 
+    id = db.Column(db.Integer, primary_key=True)
+    admin_id = db.Column(db.Integer, db.ForeignKey('user_model.id'), nullable=False)
+    action = db.Column(db.String(50), nullable=False)
+    target = db.Column(db.String(200), nullable=False)
+    note = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+ 
+    admin = db.relationship('UserModel', foreign_keys=[admin_id])
