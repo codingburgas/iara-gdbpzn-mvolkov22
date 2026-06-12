@@ -31,7 +31,8 @@
                 <td>{{ vessel.marking }}</td>
                 <td>{{ vessel.call_sign or '—' }}</td>
                 <td>{{ vessel.length }} м</td>
-                <td><span class="status status-{{ vessel.status }}">{{ vessel.status }}</span></td>
+                {% set status_label = 'Чакащ' if vessel.status == 'pending' else 'Одобрен' if vessel.status == 'approved' else 'Отхвърлен' if vessel.status == 'rejected' else 'Спрян' if vessel.status == 'suspended' else 'Отнет' if vessel.status == 'revoked' else vessel.status %}
+                <td><span class="status status-{{ vessel.status }}">{{ status_label }}</span></td>
                 <td><a href="{{ url_for('vessels.vessel_detail', vessel_id=vessel.id) }}">Преглед</a></td>
             </tr>
             {% endfor %}

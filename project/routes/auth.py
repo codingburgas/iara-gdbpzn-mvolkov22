@@ -15,11 +15,11 @@ def register():
         is_company = bool(request.form.get('is_company', False))
 
         if UserModel.query.filter_by(email=email).first():
-            flash('An account with this email already exists!')
+            flash('Акаунт с този имейл вече съществува!')
             return redirect(url_for('auth.register'))
 
         if UserModel.query.filter_by(identifier=identifier).first():
-            flash('An account with this EGN/EIK already exists!')
+            flash('Акаунт с това ЕГН/ЕИК вече съществува!')
             return redirect(url_for('auth.register'))
 
         try:
@@ -54,7 +54,7 @@ def login():
         user = UserModel.query.filter_by(email=email).first()
 
         if not user or not user.check_password(password):
-            flash('Wrong email or password!')
+            flash('Грешен имейл или парола!')
             return redirect(url_for('auth.login'))
 
         session['user_id'] = user.id

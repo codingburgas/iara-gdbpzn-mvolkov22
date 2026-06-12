@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Разрешително {{ permit.permit_number }}{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/permits.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="permits-wrap-narrow">
+    <div class="page-header-between">
+        <a href="{{ url_for('permitsBp.list_permits') }}" class="back-link">← Назад</a>
+        <span class="badge
+            {% if permit.status == 'active' %}badge-approved
+            {% elif permit.status == 'expired' %}badge-pending
+            {% else %}badge-rejected{% endif %}">
+            {% set permit_status = 'Активно' if permit.status == 'active' else 'Изтекло' if permit.status == 'expired' else 'Отнето' if permit.status == 'revoked' else permit.status %}
+            {{ permit_status }}
+        </span>
+    </div>
+
+    <div class="detail-section">
+        <div class="detail-section-title">Основна информация</div>
+        {% for label, value in [
+            ('Номер', permit.permit_number),
+            ('Притежател', permit.holder.full_name),
+            ('Кораб', permit.vessel.cfr_number ~ ' / ' ~ permit.vessel.marking),
+            ('Издадено на', permit.issued_date.strftime('%d.%m.%Y')),
+            ('Важи до', permit.valid_until.strftime('%d.%m.%Y')),
+        ] %}
+        <div class="detail-row">
+            <span class="detail-label">{{ label }}</span>
+            <span class="detail-value">{{ value }}</span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="detail-section">
+        <div class="detail-section-title">Капитан и уреди</div>
+        {% for label, value in [
+            ('Капитан', permit.captain_name or '—'),
+            ('Лиценз', permit.captain_license or '—'),
+            ('Разрешени уреди', permit.allowed_gear or '—'),
+        ] %}
+        <div class="detail-row">
+            <span class="detail-label">{{ label }}</span>
+            <span class="detail-value">{{ value }}</span>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if permit.status == 'revoked' and permit.revoke_reason %}
+    <div class="revoke-box">
+        <div class="revoke-box-title">Причина за отнемане</div>
+        <div class="revoke-box-text">{{ permit.revoke_reason }}</div>
+    </div>
+    {% endif %}
+
+    {% if user.role == 'admin' and permit.status == 'active' %}
+    <div class="card card-alert">
+        <div class="detail-section-title danger">Отнемане на разрешително</div>
+        <form method="POST" action="{{ url_for('permitsBp.revoke_permit', permit_id=permit.id) }}">
+            <div class="revoke-container">
+                <div class="revoke-reason">
+                    <input type="text" name="reason" placeholder="Причина за отнемане" required class="revoke-reason-input">
+                </div>
+                <button type="submit" class="btn-action btn-reject revoke-button"
+                        onclick="return confirm('Отнеми разрешителното?')">
+                    Отнеми
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

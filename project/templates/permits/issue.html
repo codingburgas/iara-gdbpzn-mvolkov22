@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Издай разрешително{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/permits.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="permits-wrap-form">
+    <div class="page-header">
+        <a href="{{ url_for('adminBp.index') }}" class="back-link">← Назад</a>
+        <h1>Издай разрешително</h1>
+    </div>
+
+    <div class="card">
+
+        <form method="POST" action="{{ url_for('permitsBp.issue_permit') }}">
+            <div class="form-section-title">Основна информация</div>
+
+            <div class="form-group">
+                <label>Номер на разрешителното</label>
+                <input type="text" name="permit_number" placeholder="ИАРА-2026-000001" required>
+            </div>
+
+            <div class="form-group">
+                <label>Кораб</label>
+                <select name="vessel_id" required id="vessel-select">
+                    <option value="">— Изберете кораб —</option>
+                    {% for vessel in vessels %}
+                    <option value="{{ vessel.id }}" data-owner-id="{{ vessel.owner_id }}" {% if preselected_vessel_id == vessel.id %}selected{% endif %}>
+                        {{ vessel.cfr_number }} / {{ vessel.marking }}
+                        ({{ vessel.owner.full_name }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Притежател</label>
+                <select name="holder_id" required id="holder-select">
+                    <option value="">— Изберете притежател —</option>
+                    {% for u in users %}
+                    <option value="{{ u.id }}">{{ u.full_name }} ({{ u.email }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Дата на издаване</label>
+                    <input type="date" name="issued_date" required>
+                </div>
+                <div class="form-group">
+                    <label>Важи до</label>
+                    <input type="date" name="valid_until" required>
+                </div>
+            </div>
+
+            <div class="form-section-title spaced">Капитан и уреди</div>
+
+            <div class="form-group">
+                <label>Капитан</label>
+                <input type="text" name="captain_name" placeholder="Иван Иванов">
+            </div>
+
+            <div class="form-group">
+                <label>Лиценз на капитана</label>
+                <input type="text" name="captain_license" placeholder="LIC-00001">
+            </div>
+
+            <div class="form-group">
+                <label>Разрешени уреди</label>
+                <input type="text" name="allowed_gear" placeholder="Дънен трал, Парагади">
+            </div>
+
+            <button type="submit" class="btn btn-primary form-full-width">
+                Издай разрешителното →
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('vessel-select').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const ownerId = selectedOption.getAttribute('data-owner-id');
+    if (ownerId) {
+        document.getElementById('holder-select').value = ownerId;
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const vesselSelect = document.getElementById('vessel-select');
+    if (vesselSelect.value) {
+        const selectedOption = vesselSelect.options[vesselSelect.selectedIndex];
+        const ownerId = selectedOption.getAttribute('data-owner-id');
+        if (ownerId) {
+            document.getElementById('holder-select').value = ownerId;
+        }
+    }
+});
+</script>
+{% endblock %}

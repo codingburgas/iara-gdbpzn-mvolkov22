@@ -3,6 +3,7 @@ from models.models import db, UserModel as User
 from routes.auth import authApp as authBp
 from routes.admin import adminApp as adminBp
 from routes.vessels import vesselsApp as vesselsBp
+from routes.permits import permitsApp as permitsApp
 from database import config
 
 app = Flask(__name__)
@@ -17,6 +18,7 @@ with app.app_context():
 app.register_blueprint(authBp, url_prefix='/auth')
 app.register_blueprint(adminBp, url_prefix='/admin')
 app.register_blueprint(vesselsBp, url_prefix='/vessels')
+app.register_blueprint(permitsApp, url_prefix='/permits')
 
 
 # limit access to certain routes based on authentication and role
@@ -24,9 +26,9 @@ app.register_blueprint(vesselsBp, url_prefix='/vessels')
 def before_request():
     g.user = User.query.get(session.get('user_id'))
 
-    if request.path.startswith('/vessels') or request.path.startswith('/admin'):
+    if request.path.startswith('/vessels') or request.path.startswith('/admin') or request.path.startswith('/permits'):
         if not session.get('user_id'):
-            flash('Login first!')
+            flash('Моля, влезте първо!')
             return redirect(url_for('auth.login'))
 
     if request.path.startswith('/admin'):

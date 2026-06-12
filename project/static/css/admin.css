@@ -3,6 +3,14 @@
     margin: 0 auto;
 }
 
+.admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -27,6 +35,35 @@
 .stat-number.pending  { color: #f0c040; }
 .stat-number.approved { color: #34d399; }
 .stat-number.rejected { color: #fca5a5; }
+.stat-number.users { color: #06b6d4; }
+
+.inline-form {
+    display: inline;
+}
+
+.user-role-form {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+}
+
+.no-margin-form {
+    margin: 0;
+}
+
+.self-label {
+    font-size: .8rem;
+    color: #8aa0bc;
+}
+
+.log-note {
+    color: #8aa0bc;
+    font-size: .82rem;
+}
+
+.note-form.hidden {
+    display: none;
+}
 
 .stat-label {
     font-size: .75rem;
@@ -135,4 +172,148 @@ select {
     border: 1px dashed #1e3a5f;
     border-radius: 8px;
     font-size: 0.9rem;
+}
+
+.tab-content {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.tab-content .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    align-items: center;
+    margin-bottom: 1.4rem;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.tab-content .filter-bar .filter-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #334155;
+    margin-right: 0.5rem;
+}
+
+.tab-content .filter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.65rem 1rem;
+    border-radius: 999px;
+    border: 1px solid #cbd5e1;
+    background: white;
+    color: #334155;
+    text-decoration: none;
+    font-size: 0.84rem;
+    font-weight: 600;
+    transition: all 0.18s ease;
+}
+
+.tab-content .filter-btn:hover {
+    border-color: #0e7490;
+    background: #eff6ff;
+    color: #0e7490;
+}
+
+.tab-content .filter-btn.active {
+    background: #0e7490;
+    border-color: #0e7490;
+    color: white;
+    box-shadow: 0 6px 16px rgba(14,116,144,0.18);
+}
+
+@media (max-width: 720px) {
+    .tab-content .filter-bar {
+        justify-content: flex-start;
+    }
+}
+
+
+.tab-content table {
+    margin: 0;
+    box-shadow: none;
+    border: none;
+}
+
+.tab-content thead {
+    background: linear-gradient(135deg, #0e7490, #06b6d4);
+}
+
+.tab-content tbody tr:nth-child(even) {
+    background-color: #f9fafb;
+}
+
+.tab-content tbody tr:hover {
+    background-color: #f0f9ff;
+}
+
+.tab-content table tbody td {
+    border-color: #e5e7eb;
+}
+
+.tab-content .actions-cell {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.tab-content .btn-action {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.note-form {
+    background: rgba(17,34,64,.1);
+    padding: 1rem;
+    border-radius: 6px;
+    margin-top: 0.75rem;
+}
+
+.note-form input {
+    width: 100%;
+    margin-bottom: 0.6rem;
+    padding: 0.6rem 0.8rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    color: #374151;
+    font-family: inherit;
+    font-size: 0.875rem;
+    outline: none;
+}
+
+.note-form input:focus {
+    border-color: #0e7490;
+    box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1);
+}
+
+.note-form button {
+    width: 100%;
+}
+
+select {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    color: #374151;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+}
+
+select:focus {
+    border-color: #0e7490;
+    box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1);
 }

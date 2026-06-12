@@ -11,16 +11,47 @@ def log(action, target, note=''):
 
 @adminApp.route('/')
 def index():
-    pending   = VesselModel.query.filter_by(status='pending').all()
+    from models.models import PermitModel
+    pending = VesselModel.query.filter_by(status='pending').all()
+    approved = VesselModel.query.filter_by(status='approved').all()
     all_users = UserModel.query.order_by(UserModel.created_at.desc()).all()
-    logs      = AdminLog.query.order_by(AdminLog.created_at.desc()).limit(50).all()
+    logs = AdminLog.query.order_by(AdminLog.created_at.desc()).limit(50).all()
+    
+    approved_without_permit = []
+    approved_with_info = []
+
+    approved_filter = request.args.get('approved_filter', 'all')
+
+    for vessel in approved:
+        latest_permit = PermitModel.query.filter_by(vessel_id=vessel.id).order_by(PermitModel.created_at.desc()).first()
+        active_permit = latest_permit if latest_permit and latest_permit.status == 'active' else None
+
+        if not active_permit:
+            approved_without_permit.append(vessel)
+
+        include = False
+        if approved_filter in ('all', None):
+            include = True
+        elif approved_filter == 'without':
+            include = (latest_permit is None)
+        elif approved_filter == 'with':
+            include = (latest_permit is not None)
+        elif approved_filter in ('active', 'expired', 'revoked'):
+            include = (latest_permit is not None and latest_permit.status == approved_filter)
+
+        if include:
+            approved_with_info.append({
+                'vessel': vessel,
+                'permit': latest_permit
+            })
+    
     stats = {
         'approved': VesselModel.query.filter_by(status='approved').count(),
         'rejected': VesselModel.query.filter_by(status='rejected').count(),
         'revoked':  VesselModel.query.filter_by(status='revoked').count(),
         'users':    UserModel.query.count(),
     }
-    return render_template('admin/index.html', user=g.user, pending=pending, all_users=all_users, logs=logs, stats=stats)
+    return render_template('admin/index.html', user=g.user, pending=pending, approved_without_permit=approved_without_permit, approved_with_info=approved_with_info, all_users=all_users, logs=logs, stats=stats, approved_filter=approved_filter)
 
 
 # Vessels
@@ -31,7 +62,7 @@ def approve(vessel_id):
     vessel.status = 'approved'
     log('approve', vessel.cfr_number)
     db.session.commit()
-    flash(f'Vessel {vessel.cfr_number} approved.', 'success')
+    flash(f'Кораб {vessel.cfr_number} е одобрен.', 'success')
     return redirect(url_for('adminBp.index'))
 
 
@@ -40,13 +71,13 @@ def reject(vessel_id):
     vessel = VesselModel.query.get_or_404(vessel_id)
     note = request.form.get('note', '').strip()
     if not note:
-        flash('A reason is required when rejecting.', 'error')
+        flash('Необходимо е посочване на причина при отказ.', 'error')
         return redirect(url_for('adminBp.index'))
     vessel.status = 'rejected'
     vessel.admin_note = note
     log('reject', vessel.cfr_number, note)
     db.session.commit()
-    flash(f'Vessel {vessel.cfr_number} rejected.', 'success')
+    flash(f'Корабът {vessel.cfr_number} е отхвърлен.', 'success')
     return redirect(url_for('adminBp.index'))
 
 
@@ -55,13 +86,13 @@ def revoke(vessel_id):
     vessel = VesselModel.query.get_or_404(vessel_id)
     note = request.form.get('note', '').strip()
     if not note:
-        flash('A reason is required when revoking.', 'error')
+        flash('Необходимо е посочване на причина при отнемане.', 'error')
         return redirect(url_for('adminBp.index'))
     vessel.status     = 'revoked'
     vessel.admin_note = note
     log('revoke', vessel.cfr_number, note)
     db.session.commit()
-    flash(f'Vessel {vessel.cfr_number} revoked.', 'success')
+    flash(f'Корабът {vessel.cfr_number} е отнет.', 'success')
     return redirect(url_for('adminBp.index'))
 
 
@@ -72,15 +103,16 @@ def change_role(user_id):
     user = UserModel.query.get_or_404(user_id)
     role = request.form.get('role')
     if role not in ('user', 'inspector', 'admin'):
-        flash('Invalid role.', 'error')
+        flash('Невалидна роля.', 'error')
         return redirect(url_for('adminBp.index'))
     if user.id == g.user.id:
-        flash('You cannot change your own role.', 'error')
+        flash('Не можете да променяте собствената си роля.', 'error')
         return redirect(url_for('adminBp.index'))
     log('change_role', user.email, f'{user.role} → {role}')
     user.role = role
     db.session.commit()
-    flash(f'Role of {user.full_name} updated to {role}.', 'success')
+    role_names = {'user': 'потребител', 'inspector': 'инспектор', 'admin': 'администратор'}
+    flash(f'Ролята на {user.full_name} е променена на {role_names.get(role, role)}.', 'success')
     return redirect(url_for('adminBp.index'))
 
 
@@ -88,7 +120,7 @@ def change_role(user_id):
 def toggle_user(user_id):
     user = UserModel.query.get_or_404(user_id)
     if user.id == g.user.id:
-        flash('You cannot block yourself.', 'error')
+        flash('Не можете да блокирате себе си.', 'error')
         return redirect(url_for('adminBp.index'))
     action = 'deactivate' if user.is_active else 'activate'
     log(action, user.email)

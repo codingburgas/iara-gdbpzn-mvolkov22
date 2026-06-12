@@ -67,6 +67,7 @@ class PermitModel(db.Model):
     revoke_reason = db.Column(db.Text)
 
     created_at = db.Column(db.DateTime, default=db.func.now())
+    holder = db.relationship('UserModel', foreign_keys=[holder_id])
 
 class AdminLog(db.Model):
     table_name = 'admin_log'

@@ -2,6 +2,10 @@
     box-sizing: border-box;
 }
 
+.hidden {
+    display: none !important;
+}
+
 body {
     font-family: Arial, sans-serif;
     background-color: #f0f4f8;
@@ -108,4 +112,120 @@ footer {
     border-top: 1px solid #1e3a5f;
     color: white;
     font-size: 0.8rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+thead {
+    background: linear-gradient(135deg, #0e7490, #06b6d4);
+    color: white;
+}
+
+thead th {
+    padding: 1rem 1.25rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    text-align: left;
+    border: none;
+}
+
+tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+    transition: background 0.15s ease;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f9fafb;
+}
+
+tbody tr:hover {
+    background-color: #f0f9ff;
+}
+
+tbody td {
+    padding: 1.125rem 1.25rem;
+    font-size: 0.875rem;
+    color: #374151;
+    vertical-align: middle;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.actions-cell form {
+    margin: 0;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.badge-approved {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #059669;
+}
+
+.badge-pending {
+    background-color: rgba(240, 192, 64, 0.15);
+    color: #b45309;
+}
+
+.badge-rejected {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+}
+
+.status {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-active {
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+}
+
+.status-pending {
+    background: rgba(240, 192, 64, 0.15);
+    color: #b45309;
+}
+
+.status-expired {
+    background: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+}
+
+.status-revoked {
+    background: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+}
+
+.card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }

@@ -16,13 +16,18 @@ def add_vessel():
         cfr_number = request.form['cfr_number']
 
         if VesselModel.query.filter_by(cfr_number=cfr_number).first():
-            flash('A vessel with this CFR number already exists!')
+            flash('Кораб със същия CFR номер вече съществува!')
+            return redirect(url_for('vessels.add_vessel'))
+
+        call_sign = request.form.get('call_sign', '').strip() or None
+        if call_sign and VesselModel.query.filter_by(call_sign=call_sign).first():
+            flash('Кораб със същия позивен вече съществува!')
             return redirect(url_for('vessels.add_vessel'))
 
         vessel = VesselModel(
             owner_id = g.user.id,
             cfr_number = cfr_number,
-            call_sign = request.form.get('call_sign'),
+            call_sign = call_sign,
             marking = request.form['marking'],
             captain_name = request.form.get('captain_name'),
             captain_license = request.form.get('captain_license'),
@@ -37,7 +42,7 @@ def add_vessel():
         db.session.add(vessel)
         db.session.commit()
 
-        flash('Vessel registered successfully. Waiting for admin approval.', 'success')
+        flash('Корабът е регистриран успешно. Изчаква одобрение от администратор.', 'success')
         return redirect(url_for('vessels.list_vessels'))
 
     return render_template('vessels/add.html', user=g.user)
@@ -48,7 +53,7 @@ def vessel_detail(vessel_id):
     vessel = VesselModel.query.get_or_404(vessel_id)
 
     if vessel.owner_id != g.user.id:
-        flash('You do not have access to this vessel.')
+        flash('Нямате достъп до този кораб.')
         return redirect(url_for('vessels.list_vessels'))
 
     return render_template('vessels/detail.html', user=g.user, vessel=vessel)
@@ -59,16 +64,16 @@ def suspend_vessel(vessel_id):
     vessel = VesselModel.query.get_or_404(vessel_id)
 
     if vessel.owner_id != g.user.id:
-        flash('You do not have access to this vessel.')
+        flash('Нямате достъп до този кораб.')
         return redirect(url_for('vessels.list_vessels'))
 
     if vessel.status != 'approved':
-        flash('Only approved vessels can be suspended.')
+        flash('Само одобрени кораби могат да бъдат спрени.')
         return redirect(url_for('vessels.vessel_detail', vessel_id=vessel_id))
 
     vessel.status = 'suspended'
     db.session.commit()
-    flash('Vessel suspended.')
+    flash('Корабът е спрян.')
     return redirect(url_for('vessels.vessel_detail', vessel_id=vessel_id))
 
 
@@ -77,14 +82,14 @@ def reactivate_vessel(vessel_id):
     vessel = VesselModel.query.get_or_404(vessel_id)
 
     if vessel.owner_id != g.user.id:
-        flash('You do not have access to this vessel.')
+        flash('Нямате достъп до този кораб.')
         return redirect(url_for('vessels.list_vessels'))
 
     if vessel.status != 'suspended':
-        flash('Only suspended vessels can be reactivated.')
+        flash('Само спрени кораби могат да бъдат реактивирани.')
         return redirect(url_for('vessels.vessel_detail', vessel_id=vessel_id))
 
     vessel.status = 'approved'
     db.session.commit()
-    flash('Vessel reactivated.')
+    flash('Корабът е реактивиран.')
     return redirect(url_for('vessels.vessel_detail', vessel_id=vessel_id))
