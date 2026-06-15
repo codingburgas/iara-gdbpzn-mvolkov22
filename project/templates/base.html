@@ -29,6 +29,9 @@
             {% if user.role in ['user', 'inspector'] %}
                 <a href="{{ url_for('permitsBp.list_permits') }}">Разрешителни</a>
             {% endif %}
+            {% if user.role == 'inspector' %}
+                <a href="{{ url_for('inspectorBp.dashboard') }}">Инспекции</a>
+            {% endif %}
             {% if user.role == 'admin' %}
                 <a href="/admin">Админ панел</a>
             {% endif %}

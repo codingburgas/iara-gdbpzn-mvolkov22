@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Глоба {{ fine.fine_number }}{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="admin-wrap">
+    <div class="page-header-between">
+        <a href="{{ url_for('adminBp.list_fines') }}" class="back-link">← Към глобите</a>
+        <span class="badge
+            {% if fine.status == 'approved' %}badge-approved
+            {% elif fine.status == 'pending' %}badge-pending
+            {% elif fine.status == 'paid' %}badge-approved
+            {% else %}badge-rejected{% endif %}">
+            {% set fine_status = 'Одобрена' if fine.status == 'approved' else 'Чакаща' if fine.status == 'pending' else 'Платена' if fine.status == 'paid' else 'Отхвърлена' %}
+            {{ fine_status }}
+        </span>
+    </div>
+
+    <div class="detail-section">
+        <div class="detail-section-title">Информация за глоба</div>
+        <div class="detail-row">
+            <span class="detail-label">Номер</span>
+            <span class="detail-value">{{ fine.fine_number }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Акт</span>
+            <span class="detail-value">{{ fine.act.act_number }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Инспектор</span>
+            <span class="detail-value">{{ fine.inspector.full_name }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Кораб</span>
+            <span class="detail-value">{{ fine.vessel.cfr_number }} / {{ fine.vessel.marking }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Собственик</span>
+            <span class="detail-value">{{ fine.vessel.owner.full_name }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Сума</span>
+            <span class="detail-value"><strong>{{ fine.amount }} евро</strong></span>
+        </div>
+        {% if fine.legal_basis %}
+        <div class="detail-row">
+            <span class="detail-label">Правно основание</span>
+            <span class="detail-value">{{ fine.legal_basis }}</span>
+        </div>
+        {% endif %}
+        <div class="detail-row">
+            <span class="detail-label">Създадена на</span>
+            <span class="detail-value">{{ fine.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+        </div>
+    </div>
+
+    {% if fine.violation_description %}
+    <div class="detail-section">
+        <div class="detail-section-title">Описание на нарушението</div>
+        <p class="text-content">{{ fine.violation_description }}</p>
+    </div>
+    {% endif %}
+
+    {% if fine.status == 'pending' %}
+    <div class="form-actions">
+        <form method="POST" action="{{ url_for('adminBp.approve_fine', fine_id=fine.id) }}" style="display:inline">
+            <button type="submit" class="btn btn-primary"
+                    onclick="return confirm('Одобри глоба {{ fine.fine_number }}?')">
+                Одобри глоба
+            </button>
+        </form>
+        <form method="POST" action="{{ url_for('adminBp.reject_fine', fine_id=fine.id) }}" style="display:inline">
+            <input type="text" name="note" placeholder="Причина за отхвърляне" required style="padding:0.75rem 1rem;border:1px solid #e5e7eb;border-radius:6px;font-size:0.875rem;font-family:inherit;margin-right:0.5rem">
+            <button type="submit" class="btn-action btn-reject"
+                    onclick="return confirm('Отхвърли глоба {{ fine.fine_number }}?')">
+                Отхвърли
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+    {% if fine.admin_note %}
+    <div class="revoke-box">
+        <div class="revoke-box-title">Бележка от администратор</div>
+        <div class="revoke-box-text">{{ fine.admin_note }}</div>
+    </div>
+    {% endif %}
+
+    {% if fine.decided_at %}
+    <div class="detail-section">
+        <div class="detail-section-title">Решение</div>
+        <div class="detail-row">
+            <span class="detail-label">Решена от</span>
+            <span class="detail-value">{{ fine.admin.full_name }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Дата на решение</span>
+            <span class="detail-value">{{ fine.decided_at.strftime('%d.%m.%Y %H:%M') }}</span>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

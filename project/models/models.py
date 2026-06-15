@@ -17,6 +17,9 @@ class UserModel(db.Model):
     is_company = db.Column(db.Boolean, default=False, nullable=False)
 
     relationships = db.relationship('VesselModel', backref='owner', lazy=True)
+    inspection_acts = db.relationship('InspectionAct', foreign_keys='InspectionAct.inspector_id', back_populates='inspector', lazy=True)
+    issued_fines = db.relationship('Fine', foreign_keys='Fine.inspector_id', back_populates='inspector', lazy=True)
+    decided_fines = db.relationship('Fine', foreign_keys='Fine.admin_id', back_populates='admin', lazy=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -47,6 +50,8 @@ class VesselModel(db.Model):
     created_at = db.Column(db.DateTime, default=db.func.now())
 
     permits = db.relationship('PermitModel', backref='vessel', lazy=True)
+    inspection_acts = db.relationship('InspectionAct', back_populates='vessel', lazy=True)
+    fines = db.relationship('Fine', back_populates='vessel', lazy=True)
 
 class PermitModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -71,12 +76,50 @@ class PermitModel(db.Model):
 
 class AdminLog(db.Model):
     table_name = 'admin_log'
- 
+  
     id = db.Column(db.Integer, primary_key=True)
     admin_id = db.Column(db.Integer, db.ForeignKey('user_model.id'), nullable=False)
     action = db.Column(db.String(50), nullable=False)
     target = db.Column(db.String(200), nullable=False)
     note = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=db.func.now())
- 
+  
     admin = db.relationship('UserModel', foreign_keys=[admin_id])
+
+
+class InspectionAct(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    act_number = db.Column(db.String(30), unique=True, nullable=False)
+    inspector_id = db.Column(db.Integer, db.ForeignKey('user_model.id'), nullable=False)
+    vessel_id = db.Column(db.Integer, db.ForeignKey('vessel_model.id'), nullable=False)
+    inspection_date = db.Column(db.Date, nullable=False)
+    location = db.Column(db.String(200))
+    findings = db.Column(db.Text)
+    violations = db.Column(db.Text)
+    status = db.Column(db.Enum('draft', 'submitted', 'confirmed', 'cancelled'), default='draft', nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+
+    inspector = db.relationship('UserModel', foreign_keys=[inspector_id], back_populates='inspection_acts')
+    vessel = db.relationship('VesselModel', foreign_keys=[vessel_id], back_populates='inspection_acts')
+    fines = db.relationship('Fine', backref='act', lazy=True)
+
+
+class Fine(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    fine_number = db.Column(db.String(30), unique=True, nullable=False)
+    act_id = db.Column(db.Integer, db.ForeignKey('inspection_act.id'), nullable=False)
+    inspector_id = db.Column(db.Integer, db.ForeignKey('user_model.id'), nullable=False)
+    vessel_id = db.Column(db.Integer, db.ForeignKey('vessel_model.id'), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    violation_description = db.Column(db.Text)
+    legal_basis = db.Column(db.String(200))
+    status = db.Column(db.Enum('pending', 'approved', 'rejected', 'paid'), default='pending', nullable=False)
+    admin_note = db.Column(db.Text)
+    admin_id = db.Column(db.Integer, db.ForeignKey('user_model.id'), nullable=True)
+    decided_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+
+    inspector = db.relationship('UserModel', foreign_keys=[inspector_id], back_populates='issued_fines')
+    vessel = db.relationship('VesselModel', foreign_keys=[vessel_id], back_populates='fines')
+    admin = db.relationship('UserModel', foreign_keys=[admin_id], back_populates='decided_fines')

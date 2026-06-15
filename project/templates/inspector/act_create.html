@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Нов акт за проверка{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/inspections.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="inspector-wrap-narrow">
+    <div class="page-header-between">
+        <a href="{{ url_for('inspectorBp.dashboard') }}" class="back-link">← Назад</a>
+        <h1>Нов акт за проверка</h1>
+    </div>
+
+    <div class="detail-section">
+        <form method="POST">
+            <div class="form-section-title">Кораб</div>
+            <div class="form-group">
+                <label for="vessel_id">Кораб</label>
+                <select name="vessel_id" id="vessel_id" required>
+                    <option value="">— Изберете кораб —</option>
+                    {% for vessel in vessels %}
+                    <option value="{{ vessel.id }}">{{ vessel.cfr_number }} / {{ vessel.marking }} — {{ vessel.owner.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-section-title spaced">Информация за проверката</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="inspection_date">Дата на проверка</label>
+                    <input type="date" name="inspection_date" id="inspection_date" value="{{ today }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="location">Място</label>
+                    <input type="text" name="location" id="location" placeholder="Пристанище / координати">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="findings">Констатации</label>
+                <textarea name="findings" id="findings" rows="4" placeholder="Описание на извършената проверка и констатации"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="violations">Установени нарушения</label>
+                <textarea name="violations" id="violations" rows="3" placeholder="Описание на констатираните нарушения (ако има)"></textarea>
+            </div>
+
+            <div class="form-section-title spaced">Глоба (ако е приложимо)</div>
+            <div class="fine-section" id="fineSection">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fine_amount">Сума (евро)</label>
+                        <input type="number" name="fine_amount" id="fine_amount" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="legal_basis">Правно основание</label>
+                        <input type="text" name="legal_basis" id="legal_basis" placeholder="Чл. ... от ЗРА">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="violation_description">Описание на нарушението</label>
+                    <textarea name="violation_description" id="violation_description" rows="2" placeholder="Подробно описание на нарушението"></textarea>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Създай акт</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

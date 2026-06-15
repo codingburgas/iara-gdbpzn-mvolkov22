@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Глоби{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="admin-wrap">
+    <div class="page-header-between">
+        <h1>Глоби</h1>
+        <a href="{{ url_for('adminBp.index') }}" class="back-link">← Админ панел</a>
+    </div>
+
+    <div class="filter-bar">
+        <span class="filter-label">Филтри:</span>
+        <a href="{{ url_for('adminBp.list_fines') }}" class="filter-btn {% if not current_filter %}active{% endif %}">Всички</a>
+        <a href="{{ url_for('adminBp.list_fines', status='pending') }}" class="filter-btn {% if current_filter == 'pending' %}active{% endif %}">Чакащи</a>
+        <a href="{{ url_for('adminBp.list_fines', status='approved') }}" class="filter-btn {% if current_filter == 'approved' %}active{% endif %}">Одобрени</a>
+        <a href="{{ url_for('adminBp.list_fines', status='rejected') }}" class="filter-btn {% if current_filter == 'rejected' %}active{% endif %}">Отхвърлени</a>
+        <a href="{{ url_for('adminBp.list_fines', status='paid') }}" class="filter-btn {% if current_filter == 'paid' %}active{% endif %}">Платени</a>
+    </div>
+
+    <div class="table-container">
+        {% if fines %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Номер</th>
+                    <th>Инспектор</th>
+                    <th>Кораб</th>
+                    <th>Сума</th>
+                    <th>Статус</th>
+                    <th>Дата</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fine in fines %}
+                <tr>
+                    <td><strong>{{ fine.fine_number }}</strong></td>
+                    <td>{{ fine.inspector.full_name }}</td>
+                    <td>{{ fine.vessel.cfr_number }} / {{ fine.vessel.marking }}</td>
+                    <td><strong>{{ fine.amount }} евро</strong></td>
+                    <td>
+                        {% set fine_status = 'Чакаща' if fine.status == 'pending' else 'Одобрена' if fine.status == 'approved' else 'Отхвърлена' if fine.status == 'rejected' else 'Платена' %}
+                        {% set status_class = 'status-pending' if fine.status == 'pending' else 'status-active' if fine.status == 'approved' else 'status-revoked' if fine.status == 'rejected' else 'status-active' %}
+                        <span class="status {{ status_class }}">{{ fine_status }}</span>
+                    </td>
+                    <td>{{ fine.created_at.strftime('%d.%m.%Y') }}</td>
+                    <td class="actions-cell">
+                        {% if fine.status == 'pending' %}
+                        <form method="POST" action="{{ url_for('adminBp.approve_fine', fine_id=fine.id) }}" class="inline-form">
+                            <button type="submit" class="btn-action btn-approve"
+                                    onclick="return confirm('Одобри глоба {{ fine.fine_number }}?')">
+                                Одобри
+                            </button>
+                        </form>
+                        <button class="btn-action btn-reject"
+                                onclick="toggleNote('reject-{{ fine.id }}')">
+                            Отхвърли
+                        </button>
+                        <div id="reject-{{ fine.id }}" class="note-form hidden">
+                            <form method="POST"
+                                  action="{{ url_for('adminBp.reject_fine', fine_id=fine.id) }}">
+                                <input type="text" name="note"
+                                       placeholder="Причина за отхвърляне" required>
+                                <button type="submit" class="btn-action btn-reject">
+                                    Потвърди
+                                </button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <a href="{{ url_for('adminBp.fine_detail', fine_id=fine.id) }}" class="btn-action btn-approve">Преглед</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">Няма намерени глоби</div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleNote(id) {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+{% endblock %}

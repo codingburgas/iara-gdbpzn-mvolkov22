@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, g
-from models.models import db, VesselModel, UserModel, AdminLog
+from models.models import db, VesselModel, UserModel, AdminLog, Fine, InspectionAct
+from datetime import datetime
 
 adminApp = Blueprint('adminBp', __name__)
 
@@ -45,13 +46,15 @@ def index():
                 'permit': latest_permit
             })
     
+    pending_fines = Fine.query.filter_by(status='pending').all()
     stats = {
         'approved': VesselModel.query.filter_by(status='approved').count(),
         'rejected': VesselModel.query.filter_by(status='rejected').count(),
         'revoked':  VesselModel.query.filter_by(status='revoked').count(),
         'users':    UserModel.query.count(),
+        'pending_fines': len(pending_fines),
     }
-    return render_template('admin/index.html', user=g.user, pending=pending, approved_without_permit=approved_without_permit, approved_with_info=approved_with_info, all_users=all_users, logs=logs, stats=stats, approved_filter=approved_filter)
+    return render_template('admin/index.html', user=g.user, pending=pending, approved_without_permit=approved_without_permit, approved_with_info=approved_with_info, all_users=all_users, logs=logs, stats=stats, approved_filter=approved_filter, pending_fines=pending_fines)
 
 
 # Vessels
@@ -129,3 +132,65 @@ def toggle_user(user_id):
     state = 'активиран' if user.is_active else 'блокиран'
     flash(f'{user.full_name} е {state}.', 'success')
     return redirect(url_for('adminBp.index'))
+
+
+# Fines
+
+@adminApp.route('/fines')
+def list_fines():
+    status_filter = request.args.get('status', None)
+    query = Fine.query
+    if status_filter and status_filter in ('pending', 'approved', 'rejected', 'paid'):
+        query = query.filter_by(status=status_filter)
+    fines = query.order_by(Fine.created_at.desc()).all()
+    return render_template('admin/fines.html', user=g.user, fines=fines, current_filter=status_filter)
+
+
+@adminApp.route('/fines/<int:fine_id>')
+def fine_detail(fine_id):
+    fine = Fine.query.get_or_404(fine_id)
+    return render_template('admin/fine_detail.html', user=g.user, fine=fine)
+
+
+@adminApp.route('/fines/<int:fine_id>/approve', methods=['POST'])
+def approve_fine(fine_id):
+    fine = Fine.query.get_or_404(fine_id)
+    if fine.status != 'pending':
+        flash('Глобата вече е обработена.', 'error')
+        return redirect(url_for('adminBp.list_fines'))
+
+    fine.status = 'approved'
+    fine.admin_id = g.user.id
+    fine.decided_at = datetime.now()
+    db.session.commit()
+
+    log('approve_fine', fine.fine_number, f'Сума: {fine.amount} лв.')
+    db.session.commit()
+
+    flash(f'Глоба {fine.fine_number} е одобрена.', 'success')
+    return redirect(url_for('adminBp.list_fines'))
+
+
+@adminApp.route('/fines/<int:fine_id>/reject', methods=['POST'])
+def reject_fine(fine_id):
+    fine = Fine.query.get_or_404(fine_id)
+    if fine.status != 'pending':
+        flash('Глобата вече е обработена.', 'error')
+        return redirect(url_for('adminBp.list_fines'))
+
+    note = request.form.get('note', '').strip()
+    if not note:
+        flash('Необходимо е посочване на причина при отхвърляне на глоба.', 'error')
+        return redirect(url_for('adminBp.list_fines'))
+
+    fine.status = 'rejected'
+    fine.admin_note = note
+    fine.admin_id = g.user.id
+    fine.decided_at = datetime.now()
+    db.session.commit()
+
+    log('reject_fine', fine.fine_number, note)
+    db.session.commit()
+
+    flash(f'Глоба {fine.fine_number} е отхвърлена.', 'success')
+    return redirect(url_for('adminBp.list_fines'))

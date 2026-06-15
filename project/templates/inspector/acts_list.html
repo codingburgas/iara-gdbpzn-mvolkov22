@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Акт за проверка{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/inspections.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="inspector-wrap">
+    <div class="page-header-between">
+        <h1>Актове за проверка</h1>
+        <a href="{{ url_for('inspectorBp.create_act') }}" class="btn-action btn-approve">+ Нов акт</a>
+    </div>
+
+    <div class="filter-bar">
+        <span class="filter-label">Филтри:</span>
+        <a href="{{ url_for('inspectorBp.list_acts') }}" class="filter-btn {% if not current_filter %}active{% endif %}">Всички</a>
+        <a href="{{ url_for('inspectorBp.list_acts', status='draft') }}" class="filter-btn {% if current_filter == 'draft' %}active{% endif %}">Чернови</a>
+        <a href="{{ url_for('inspectorBp.list_acts', status='submitted') }}" class="filter-btn {% if current_filter == 'submitted' %}active{% endif %}">Изпратени</a>
+        <a href="{{ url_for('inspectorBp.list_acts', status='confirmed') }}" class="filter-btn {% if current_filter == 'confirmed' %}active{% endif %}">Потвърдени</a>
+        <a href="{{ url_for('inspectorBp.list_acts', status='cancelled') }}" class="filter-btn {% if current_filter == 'cancelled' %}active{% endif %}">Отменени</a>
+    </div>
+
+    <div class="table-container">
+        {% if acts %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Номер</th>
+                    <th>Кораб</th>
+                    <th>Дата на проверка</th>
+                    <th>Място</th>
+                    <th>Статус</th>
+                    <th>Глоба</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for act in acts %}
+                <tr>
+                    <td><strong>{{ act.act_number }}</strong></td>
+                    <td>{{ act.vessel.cfr_number }} / {{ act.vessel.marking }}</td>
+                    <td>{{ act.inspection_date.strftime('%d.%m.%Y') }}</td>
+                    <td>{{ act.location or '—' }}</td>
+                    <td>
+                        {% set act_status = 'Чернова' if act.status == 'draft' else 'Изпратен' if act.status == 'submitted' else 'Потвърден' if act.status == 'confirmed' else 'Отменен' %}
+                        {% set status_class = 'status-pending' if act.status == 'draft' else 'status-active' if act.status == 'submitted' else 'status-approved' if act.status == 'confirmed' else 'status-revoked' %}
+                        <span class="status {{ status_class }}">{{ act_status }}</span>
+                    </td>
+                    <td>
+                        {% if act.fines %}
+                            {% for fine in act.fines %}
+                                <span class="status status-{{ 'active' if fine.status == 'approved' else 'pending' if fine.status == 'pending' else 'revoked' if fine.status == 'rejected' else 'approved' }}">
+                                    {{ fine.amount }} евро
+                                </span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="status status-pending">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('inspectorBp.act_detail', act_id=act.id) }}" class="btn-action btn-approve">Преглед</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">Няма намерени актове</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

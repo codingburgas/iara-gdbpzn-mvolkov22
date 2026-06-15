@@ -317,3 +317,27 @@ select:focus {
     border-color: #0e7490;
     box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1);
 }
+
+.page-header-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.back-link {
+    color: #8aa0bc;
+    text-decoration: none;
+    font-size: .85rem;
+    transition: color .2s;
+}
+.back-link:hover { color: #06b6d4; }
+
+.table-container {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}

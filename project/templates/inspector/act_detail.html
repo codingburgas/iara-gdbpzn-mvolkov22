@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Акт {{ act.act_number }}{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/inspections.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="inspector-wrap-narrow">
+    <div class="page-header-between">
+        <a href="{{ url_for('inspectorBp.list_acts') }}" class="back-link">← Назад</a>
+        <span class="badge
+            {% if act.status == 'draft' %}badge-pending
+            {% elif act.status == 'submitted' %}badge-approved
+            {% elif act.status == 'confirmed' %}badge-approved
+            {% else %}badge-rejected{% endif %}">
+            {% set act_status = 'Чернова' if act.status == 'draft' else 'Изпратен' if act.status == 'submitted' else 'Потвърден' if act.status == 'confirmed' else 'Отменен' %}
+            {{ act_status }}
+        </span>
+    </div>
+
+    <div class="detail-section">
+        <div class="detail-section-title">Основна информация</div>
+        <div class="detail-row">
+            <span class="detail-label">Номер на акт</span>
+            <span class="detail-value">{{ act.act_number }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Инспектор</span>
+            <span class="detail-value">{{ act.inspector.full_name }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Кораб</span>
+            <span class="detail-value">{{ act.vessel.cfr_number }} / {{ act.vessel.marking }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Собственик</span>
+            <span class="detail-value">{{ act.vessel.owner.full_name }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Дата на проверка</span>
+            <span class="detail-value">{{ act.inspection_date.strftime('%d.%m.%Y') }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Място</span>
+            <span class="detail-value">{{ act.location or '—' }}</span>
+        </div>
+    </div>
+
+    <div class="detail-section">
+        <div class="detail-section-title">Констатации</div>
+        <p class="text-content">{{ act.findings or 'Няма констатации' }}</p>
+    </div>
+
+    {% if act.violations %}
+    <div class="detail-section">
+        <div class="detail-section-title">Установени нарушения</div>
+        <p class="text-content">{{ act.violations }}</p>
+    </div>
+    {% endif %}
+
+    {% if act.fines %}
+    <div class="detail-section">
+        <div class="detail-section-title">Глоби</div>
+        {% for fine in act.fines %}
+        <div class="fine-card">
+            <div class="fine-card-header">
+                <strong>{{ fine.fine_number }}</strong>
+                <span class="badge
+                    {% if fine.status == 'approved' %}badge-approved
+                    {% elif fine.status == 'pending' %}badge-pending
+                    {% elif fine.status == 'paid' %}badge-approved
+                    {% else %}badge-rejected{% endif %}">
+                    {% set fine_status = 'Одобрена' if fine.status == 'approved' else 'Чакаща' if fine.status == 'pending' else 'Платена' if fine.status == 'paid' else 'Отхвърлена' %}
+                    {{ fine_status }}
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Сума</span>
+                <span class="detail-value"><strong>{{ fine.amount }} евро</strong></span>
+            </div>
+            {% if fine.legal_basis %}
+            <div class="detail-row">
+                <span class="detail-label">Правно основание</span>
+                <span class="detail-value">{{ fine.legal_basis }}</span>
+            </div>
+            {% endif %}
+            {% if fine.violation_description %}
+            <div class="detail-row">
+                <span class="detail-label">Описание</span>
+                <span class="detail-value">{{ fine.violation_description }}</span>
+            </div>
+            {% endif %}
+            {% if fine.admin_note %}
+            <div class="revoke-box">
+                <div class="revoke-box-title">Бележка от администратор</div>
+                <div class="revoke-box-text">{{ fine.admin_note }}</div>
+            </div>
+            {% endif %}
+            {% if fine.admin_id and fine.decided_at %}
+            <div class="detail-row">
+                <span class="detail-label">Решена от</span>
+                <span class="detail-value">{{ fine.admin.full_name }} на {{ fine.decided_at.strftime('%d.%m.%Y %H:%M') }}</span>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="form-actions">
+        {% if act.status == 'draft' %}
+        <form method="POST" action="{{ url_for('inspectorBp.submit_act', act_id=act.id) }}" style="display:inline">
+            <button type="submit" class="btn btn-primary"
+                    onclick="return confirm('Изпращане на акт {{ act.act_number }} за обработка?')">
+                Изпрати акта
+            </button>
+        </form>
+        <form method="POST" action="{{ url_for('inspectorBp.cancel_act', act_id=act.id) }}" style="display:inline">
+            <button type="submit" class="btn-action btn-reject"
+                    onclick="return confirm('Отмяна на акт {{ act.act_number }}?')">
+                Отмени акта
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
