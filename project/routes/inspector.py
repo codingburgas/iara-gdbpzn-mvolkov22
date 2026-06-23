@@ -22,8 +22,8 @@ def dashboard():
         return redirect(url_for('index'))
 
     acts = InspectionAct.query.filter_by(inspector_id=g.user.id).order_by(InspectionAct.created_at.desc()).all()
-    pending_fines = Fine.query.filter_by(inspector_id=g.user.id, status='pending').count()
-    return render_template('inspector/dashboard.html', user=g.user, acts=acts, pending_fines=pending_fines)
+    total_fines = Fine.query.filter_by(inspector_id=g.user.id).count()
+    return render_template('inspector/dashboard.html', user=g.user, acts=acts, total_fines=total_fines)
 
 
 @inspectorApp.route('/acts')
@@ -73,7 +73,7 @@ def create_act():
                 amount=fine_amount,
                 violation_description=request.form.get('violation_description', ''),
                 legal_basis=request.form.get('legal_basis', ''),
-                status='pending',
+                status='approved',
             )
             db.session.add(fine)
 
@@ -152,15 +152,75 @@ def cancel_act(act_id):
     return redirect(url_for('inspectorBp.list_acts'))
 
 
-@inspectorApp.route('/fines/<int:fine_id>')
-def fine_detail(fine_id):
+@inspectorApp.route('/fines/create', methods=['GET', 'POST'])
+def create_fine():
     if g.user.role not in ('inspector', 'admin'):
         flash('Нямате достъп до тази страница.', 'error')
         return redirect(url_for('index'))
 
+    if request.method == 'POST':
+        vessel_id = request.form.get('vessel_id', type=int)
+        vessel = VesselModel.query.get_or_404(vessel_id)
+
+        fine_amount = request.form.get('fine_amount', type=float)
+        if not fine_amount or fine_amount <= 0:
+            flash('Моля, въведете валидна сума на глобата.', 'error')
+            return redirect(url_for('inspectorBp.create_fine'))
+
+        act = InspectionAct(
+            act_number=generate_act_number(),
+            inspector_id=g.user.id,
+            vessel_id=vessel_id,
+            inspection_date=date.today(),
+            location=request.form.get('location', ''),
+            findings='Автоматично създаден акт за глоба',
+            violations=request.form.get('violation_description', ''),
+            status='draft',
+        )
+        db.session.add(act)
+        db.session.flush()
+
+        fine = Fine(
+            fine_number=generate_fine_number(),
+            act_id=act.id,
+            inspector_id=g.user.id,
+            vessel_id=vessel_id,
+            amount=fine_amount,
+            violation_description=request.form.get('violation_description', ''),
+            legal_basis=request.form.get('legal_basis', ''),
+            status='approved',
+        )
+        db.session.add(fine)
+        db.session.commit()
+
+        flash(f'Глоба {fine.fine_number} е създадена успешно.', 'success')
+        return redirect(url_for('inspectorBp.fine_detail', fine_id=fine.id))
+
+    vessels = VesselModel.query.filter_by(status='approved').order_by(VesselModel.cfr_number).all()
+    today = date.today().isoformat()
+    return render_template('inspector/fine_create.html', user=g.user, vessels=vessels, today=today)
+
+
+@inspectorApp.route('/fines')
+def list_fines():
+    if g.user.role not in ('inspector', 'admin'):
+        flash('Нямате достъп до тази страница.', 'error')
+        return redirect(url_for('index'))
+
+    status_filter = request.args.get('status', None)
+    query = Fine.query.filter_by(inspector_id=g.user.id)
+    if status_filter and status_filter in ('approved', 'paid', 'rejected'):
+        query = query.filter_by(status=status_filter)
+    fines = query.order_by(Fine.created_at.desc()).all()
+    return render_template('inspector/fines_list.html', user=g.user, fines=fines, current_filter=status_filter)
+
+
+@inspectorApp.route('/fines/<int:fine_id>')
+def fine_detail(fine_id):
     fine = Fine.query.get_or_404(fine_id)
-    if fine.inspector_id != g.user.id and g.user.role != 'admin':
-        flash('Нямате достъп до тази глоба.', 'error')
+    vessel_owner_id = fine.vessel.owner_id if fine.vessel else None
+    if g.user.role not in ('inspector', 'admin') and g.user.id != vessel_owner_id:
+        flash('Нямате достъп до тази страница.', 'error')
         return redirect(url_for('index'))
 
     return render_template('inspector/fine_detail.html', user=g.user, fine=fine)

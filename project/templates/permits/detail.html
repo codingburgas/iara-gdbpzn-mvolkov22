@@ -8,7 +8,7 @@
 {% block content %}
 <div class="permits-wrap-narrow">
     <div class="page-header-between">
-        <a href="{{ url_for('permitsBp.list_permits') }}" class="back-link">← Назад</a>
+        <a href="{{ url_for('permitsBp.list_permits') }}" class="back-link">Назад</a>
         <span class="badge
             {% if permit.status == 'active' %}badge-approved
             {% elif permit.status == 'expired' %}badge-pending

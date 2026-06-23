@@ -25,10 +25,10 @@
             <div class="stat-number approved">{{ acts|selectattr('status', 'equalto', 'confirmed')|list|length }}</div>
             <div class="stat-label">Потвърдени</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-number" style="color:#fca5a5">{{ pending_fines }}</div>
-            <div class="stat-label">Чакащи глоби</div>
-        </div>
+        <a href="{{ url_for('inspectorBp.list_fines') }}" class="stat-card" style="text-decoration:none;display:block">
+            <div class="stat-number" style="color:#06b6d4">{{ total_fines }}</div>
+            <div class="stat-label">Издадени глоби</div>
+        </a>
     </div>
 
     <div class="detail-section">
@@ -48,7 +48,7 @@
                 {% for act in acts[:10] %}
                 <tr>
                     <td><strong>{{ act.act_number }}</strong></td>
-                    <td>{{ act.vessel.cfr_number }} / {{ act.vessel.marking }}</td>
+                    <td class="text-truncate" title="{{ act.vessel.cfr_number }} / {{ act.vessel.marking }}">{{ act.vessel.cfr_number }} / {{ act.vessel.marking }}</td>
                     <td>{{ act.inspection_date.strftime('%d.%m.%Y') }}</td>
                     <td>
                         {% set act_status = 'Чернова' if act.status == 'draft' else 'Изпратен' if act.status == 'submitted' else 'Потвърден' if act.status == 'confirmed' else 'Отменен' %}

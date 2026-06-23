@@ -39,7 +39,7 @@
                 {% for act in acts %}
                 <tr>
                     <td><strong>{{ act.act_number }}</strong></td>
-                    <td>{{ act.vessel.cfr_number }} / {{ act.vessel.marking }}</td>
+                    <td class="text-truncate" title="{{ act.vessel.cfr_number }} / {{ act.vessel.marking }}">{{ act.vessel.cfr_number }} / {{ act.vessel.marking }}</td>
                     <td>{{ act.inspection_date.strftime('%d.%m.%Y') }}</td>
                     <td>{{ act.location or '—' }}</td>
                     <td>

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Нова глоба{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/inspections.css') }}" rel="stylesheet">
+<style>
+.fine-create-form .fine-amount-group input {
+    font-size: 1.5rem;
+    font-weight: 700;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    border: 2px solid #0e7490;
+    border-radius: 8px;
+    outline: none;
+    width: 100%;
+    transition: border-color .2s, box-shadow .2s;
+}
+.fine-create-form .fine-amount-group input:focus {
+    border-color: #06b6d4;
+    box-shadow: 0 0 0 3px rgba(6,182,212,.15);
+}
+.fine-create-form .fine-amount-group {
+    position: relative;
+}
+.fine-currency {
+    position: absolute;
+    right: 1rem;
+    bottom: 0.85rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    pointer-events: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="inspector-wrap-narrow">
+    <div class="page-header-between">
+        <a href="{{ url_for('inspectorBp.dashboard') }}" class="back-link">Назад</a>
+        <h1>Нова глоба</h1>
+    </div>
+
+    <div class="detail-section fine-create-form">
+        <form method="POST">
+            <div class="form-group">
+                <label for="vessel_id">Кораб</label>
+                <select name="vessel_id" id="vessel_id" required>
+                    <option value="">— Изберете кораб —</option>
+                    {% for vessel in vessels %}
+                    <option value="{{ vessel.id }}">{{ vessel.cfr_number }} / {{ vessel.marking }} — {{ vessel.owner.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="location">Място на нарушението</label>
+                <input type="text" name="location" id="location" placeholder="Пристанище / координати">
+            </div>
+
+            <div class="form-group fine-amount-group">
+                <label for="fine_amount">Сума на глобата (евро)</label>
+                <input type="number" name="fine_amount" id="fine_amount" step="0.01" min="1" placeholder="0.00" required>
+                <div class="fine-currency">€ евро</div>
+            </div>
+
+            <div class="form-group">
+                <label for="legal_basis">Правно основание</label>
+                <input type="text" name="legal_basis" id="legal_basis" placeholder="Чл. ... от ЗРА" required>
+            </div>
+
+            <div class="form-group">
+                <label for="violation_description">Описание на нарушението</label>
+                <textarea name="violation_description" id="violation_description" rows="4" placeholder="Подробно описание на нарушението" required></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Създай глоба</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

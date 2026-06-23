@@ -1,5 +1,6 @@
 from flask import Flask, redirect, render_template, session, request, url_for, flash, g
 from models.models import db, UserModel as User
+from datetime import datetime
 from routes.auth import authApp as authBp
 from routes.admin import adminApp as adminBp
 from routes.vessels import vesselsApp as vesselsBp
@@ -28,7 +29,7 @@ app.register_blueprint(inspectorBp, url_prefix='/inspector')
 def before_request():
     g.user = User.query.get(session.get('user_id'))
 
-    if request.path.startswith('/vessels') or request.path.startswith('/admin') or request.path.startswith('/permits') or request.path.startswith('/inspector'):
+    if request.path.startswith('/vessels') or request.path.startswith('/admin') or request.path.startswith('/permits') or request.path.startswith('/inspector') or request.path.startswith('/profile') or request.path.startswith('/pay'):
         if not session.get('user_id'):
             flash('Моля, влезте първо!')
             return redirect(url_for('auth.login'))
@@ -36,6 +37,65 @@ def before_request():
     if request.path.startswith('/admin'):
         if session.get('role') != 'admin':
             return redirect(url_for('index'))
+
+
+@app.route('/profile')
+def profile():
+    from models.models import Fine, VesselModel, InspectionAct, PermitModel
+    user = g.user
+    if not user:
+        flash('Моля, влезте първо!')
+        return redirect(url_for('auth.login'))
+    if user.role == 'admin':
+        return redirect(url_for('adminBp.index'))
+
+    vessels = []
+    fines = []
+    acts = []
+    permits = []
+
+    if user.role == 'user':
+        vessels = VesselModel.query.filter_by(owner_id=user.id).all()
+        vessel_ids = [v.id for v in vessels]
+        fines = Fine.query.filter(Fine.vessel_id.in_(vessel_ids)).order_by(Fine.created_at.desc()).all() if vessel_ids else []
+        permits = PermitModel.query.filter_by(holder_id=user.id).order_by(PermitModel.created_at.desc()).all()
+    elif user.role == 'inspector':
+        acts = InspectionAct.query.filter_by(inspector_id=user.id).order_by(InspectionAct.created_at.desc()).all()
+        fines = Fine.query.filter_by(inspector_id=user.id).order_by(Fine.created_at.desc()).all()
+
+    return render_template('profile.html', user=user, vessels=vessels, fines=fines, acts=acts, permits=permits)
+
+
+@app.route('/pay/<int:fine_id>', methods=['GET', 'POST'])
+def pay_fine(fine_id):
+    from models.models import Fine
+    fine = Fine.query.get_or_404(fine_id)
+
+    if fine.status == 'pending':
+        flash('Глобата все още не е одобрена от администратор. Моля, опитайте по-късно.', 'error')
+        return redirect(url_for('profile'))
+
+    if fine.status == 'paid':
+        flash('Тази глоба вече е платена.', 'error')
+        return redirect(url_for('profile'))
+
+    if fine.status == 'rejected':
+        flash('Тази глоба е отхвърлена и не може да бъде платена.', 'error')
+        return redirect(url_for('profile'))
+
+    if request.method == 'POST':
+        payment_method = request.form.get('payment_method')
+        if payment_method in ('card', 'stripe'):
+            fine.status = 'paid'
+            fine.decided_at = datetime.now()
+            db.session.commit()
+            flash(f'Глоба {fine.fine_number} е платена успешно.', 'success')
+            return redirect(url_for('profile'))
+        else:
+            flash('Невалиден метод на плащане.', 'error')
+            return redirect(url_for('pay_fine', fine_id=fine_id))
+
+    return render_template('payment.html', user=g.user, fine=fine)
 
 
 @app.route('/')

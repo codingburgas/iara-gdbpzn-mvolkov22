@@ -1,10 +1,117 @@
 {% extends "base.html" %}
-{% block title %}ИАРА - детайли на кораб{% endblock %}
+{% block title %}ИАРА — {{ vessel.cfr_number }}{% endblock %}
 
 {% block extra_css %}
 <link href="{{ url_for('static', filename='css/vessels.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
+<div class="vessels-wrap">
+    <div class="page-header-between">
+        <a href="{{ url_for('vessels.list_vessels') }}" class="back-link">Назад</a>
+        <h1>{{ vessel.cfr_number }} / {{ vessel.marking }}</h1>
+    </div>
 
+    <div class="vessels-card">
+        <div class="detail-grid">
+            <div class="detail-field">
+                <label>CFR номер</label>
+                <div class="value">{{ vessel.cfr_number }}</div>
+            </div>
+            <div class="detail-field">
+                <label>Маркировка</label>
+                <div class="value">{{ vessel.marking }}</div>
+            </div>
+            <div class="detail-field">
+                <label>Позивна</label>
+                <div class="value">{{ vessel.call_sign or '—' }}</div>
+            </div>
+            <div class="detail-field">
+                <label>Дължина</label>
+                <div class="value">{{ vessel.length }} м</div>
+            </div>
+            <div class="detail-field">
+                <label>Статус</label>
+                <div><span class="badge badge-{{ 'approved' if vessel.status == 'approved' else 'pending' if vessel.status == 'pending' else 'rejected' if vessel.status == 'rejected' else 'pending' }}">{{ 'Одобрен' if vessel.status == 'approved' else 'Чакащ' if vessel.status == 'pending' else 'Спрян' if vessel.status == 'suspended' else 'Отнет' if vessel.status == 'revoked' else 'Отхвърлен' }}</span></div>
+            </div>
+            <div class="detail-field">
+                <label>Собственик</label>
+                <div class="value">{{ vessel.owner.full_name }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="vessels-card">
+        <div class="section-card-header">
+            <h2>Разрешителни ({{ permits|length }})</h2>
+        </div>
+        {% if permits %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Номер</th>
+                    <th>Издадено</th>
+                    <th>Важи до</th>
+                    <th>Статус</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for permit in permits %}
+                {% set pstatus_label = 'Активно' if permit.status == 'active' else 'Изтекло' if permit.status == 'expired' else 'Отнето' %}
+                <tr>
+                    <td><strong>{{ permit.permit_number }}</strong></td>
+                    <td>{{ permit.issued_date.strftime('%d.%m.%Y') }}</td>
+                    <td>{{ permit.valid_until.strftime('%d.%m.%Y') }}</td>
+                    <td><span class="badge badge-{{ 'approved' if permit.status == 'active' else 'rejected' if permit.status == 'revoked' else 'pending' }}">{{ pstatus_label }}</span></td>
+                    <td><a href="{{ url_for('permitsBp.permit_detail', permit_id=permit.id) }}" class="vessel-action">Преглед</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">Няма разрешителни за този кораб.</div>
+        {% endif %}
+    </div>
+
+    <div class="vessels-card">
+        <div class="section-card-header">
+            <h2>Глоби ({{ fines|length }})</h2>
+        </div>
+        {% if fines %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Номер</th>
+                    <th>Сума</th>
+                    <th>Статус</th>
+                    <th>Дата</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fine in fines %}
+                {% set fstatus_label = 'Чакаща' if fine.status == 'pending' else 'Одобрена' if fine.status == 'approved' else 'Отхвърлена' if fine.status == 'rejected' else 'Платена' %}
+                {% set fstatus_class = 'pending' if fine.status == 'pending' else 'approved' if fine.status == 'approved' else 'paid' if fine.status == 'paid' else 'rejected' %}
+                <tr>
+                    <td><strong>{{ fine.fine_number }}</strong></td>
+                    <td><strong>{{ fine.amount }} евро</strong></td>
+                    <td><span class="badge badge-{{ fstatus_class }}">{{ fstatus_label }}</span></td>
+                    <td>{{ fine.created_at.strftime('%d.%m.%Y') }}</td>
+                    <td>
+                        {% if fine.status == 'approved' or fine.status == 'pending' %}
+                        <a href="{{ url_for('pay_fine', fine_id=fine.id) }}" class="vessel-action pay">Плати</a>
+                        {% else %}
+                        <a href="{{ url_for('inspectorBp.fine_detail', fine_id=fine.id) }}" class="vessel-action">Преглед</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">Няма глоби за този кораб.</div>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

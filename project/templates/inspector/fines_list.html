@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Моите глоби{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/inspections.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="inspector-wrap">
+    <div class="page-header-between">
+        <h1>Моите глоби</h1>
+        <a href="{{ url_for('inspectorBp.dashboard') }}" class="back-link">Назад</a>
+    </div>
+
+    <div class="filter-bar">
+        <span class="filter-label">Филтри:</span>
+        <a href="{{ url_for('inspectorBp.list_fines') }}" class="filter-btn {% if not current_filter %}active{% endif %}">Всички</a>
+        <a href="{{ url_for('inspectorBp.list_fines', status='approved') }}" class="filter-btn {% if current_filter == 'approved' %}active{% endif %}">Активни</a>
+        <a href="{{ url_for('inspectorBp.list_fines', status='paid') }}" class="filter-btn {% if current_filter == 'paid' %}active{% endif %}">Платени</a>
+        <a href="{{ url_for('inspectorBp.list_fines', status='rejected') }}" class="filter-btn {% if current_filter == 'rejected' %}active{% endif %}">Отхвърлени</a>
+    </div>
+
+    <div class="detail-section">
+        {% if fines %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Номер</th>
+                    <th>Кораб</th>
+                    <th>Сума</th>
+                    <th>Статус</th>
+                    <th>Дата</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fine in fines %}
+                <tr>
+                    <td><strong>{{ fine.fine_number }}</strong></td>
+                    <td class="text-truncate" title="{{ fine.vessel.cfr_number }} / {{ fine.vessel.marking }}">{{ fine.vessel.cfr_number }} / {{ fine.vessel.marking }}</td>
+                    <td><strong>{{ fine.amount }} евро</strong></td>
+                    <td>
+                        {% set fstatus_label = 'Чакаща' if fine.status == 'pending' else 'Одобрена' if fine.status == 'approved' else 'Отхвърлена' if fine.status == 'rejected' else 'Платена' %}
+                        {% set fstatus_class = 'pending' if fine.status == 'pending' else 'approved' if fine.status == 'approved' else 'rejected' if fine.status == 'rejected' else 'approved' %}
+                        <span class="badge badge-{{ fstatus_class }}">{{ fstatus_label }}</span>
+                    </td>
+                    <td>{{ fine.created_at.strftime('%d.%m.%Y') }}</td>
+                    <td>
+                        <a href="{{ url_for('inspectorBp.fine_detail', fine_id=fine.id) }}" class="btn-action btn-approve">Преглед</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">Няма намерени глоби</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

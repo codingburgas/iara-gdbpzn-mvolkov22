@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Плащане на глоба {{ fine.fine_number }}{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/payment.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="payment-wrap">
+    <div class="payment-card">
+        <a href="{% if request.referrer %}{{ request.referrer }}{% else %}{{ url_for('profile') }}{% endif %}" class="back-link">Назад</a>
+        <h1>Плащане на глоба</h1>
+        <p class="payment-fine-number">{{ fine.fine_number }}</p>
+
+        <div class="payment-amount">{{ fine.amount }} евро</div>
+
+        <div class="payment-fine-info">
+            Кораб: <strong>{{ fine.vessel.cfr_number }} / {{ fine.vessel.marking }}</strong><br>
+            Основание: <strong>{{ fine.violation_description or '—' }}</strong><br>
+            Правно основание: <strong>{{ fine.legal_basis or '—' }}</strong>
+        </div>
+
+        <form method="POST" id="payment-form">
+            <div class="payment-methods">
+                <label class="payment-method" id="method-card">
+                    <input type="radio" name="payment_method" value="card" required>
+                    <div class="payment-method-indicator card">Карта</div>
+                    <div class="payment-method-info">
+                        <h3>Карта</h3>
+                        <p>Плащане с дебитна или кредитна карта (Visa, Mastercard)</p>
+                    </div>
+                </label>
+                <label class="payment-method" id="method-stripe">
+                    <input type="radio" name="payment_method" value="stripe" required>
+                    <div class="payment-method-indicator stripe">Stripe</div>
+                    <div class="payment-method-info">
+                        <h3>Stripe</h3>
+                        <p>Плащане чрез Stripe свързване на акаунт</p>
+                    </div>
+                </label>
+            </div>
+
+            <div class="payment-actions">
+                <a href="{{ url_for('profile') }}" class="btn btn-back">Назад</a>
+                <button type="submit" class="btn btn-pay" id="pay-btn" disabled>
+                    Продължи към плащане
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+        this.closest('.payment-method').classList.add('selected');
+        document.getElementById('pay-btn').disabled = false;
+    });
+});
+</script>
+{% endblock %}

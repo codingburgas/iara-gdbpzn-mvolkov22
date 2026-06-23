@@ -46,15 +46,15 @@ def index():
                 'permit': latest_permit
             })
     
-    pending_fines = Fine.query.filter_by(status='pending').all()
+    recent_fines = Fine.query.order_by(Fine.created_at.desc()).limit(10).all()
     stats = {
         'approved': VesselModel.query.filter_by(status='approved').count(),
         'rejected': VesselModel.query.filter_by(status='rejected').count(),
         'revoked':  VesselModel.query.filter_by(status='revoked').count(),
         'users':    UserModel.query.count(),
-        'pending_fines': len(pending_fines),
+        'pending_fines': Fine.query.filter_by(status='pending').count(),
     }
-    return render_template('admin/index.html', user=g.user, pending=pending, approved_without_permit=approved_without_permit, approved_with_info=approved_with_info, all_users=all_users, logs=logs, stats=stats, approved_filter=approved_filter, pending_fines=pending_fines)
+    return render_template('admin/index.html', user=g.user, pending=pending, approved_without_permit=approved_without_permit, approved_with_info=approved_with_info, all_users=all_users, logs=logs, stats=stats, approved_filter=approved_filter, recent_fines=recent_fines)
 
 
 # Vessels
@@ -171,10 +171,29 @@ def approve_fine(fine_id):
     return redirect(url_for('adminBp.list_fines'))
 
 
+@adminApp.route('/fines/<int:fine_id>/mark-paid', methods=['POST'])
+def mark_fine_paid(fine_id):
+    fine = Fine.query.get_or_404(fine_id)
+    if fine.status != 'approved':
+        flash('Само одобрени глоби могат да бъдат маркирани като платени.', 'error')
+        return redirect(url_for('adminBp.list_fines'))
+
+    fine.status = 'paid'
+    fine.admin_id = g.user.id
+    fine.decided_at = datetime.now()
+    db.session.commit()
+
+    log('pay_fine', fine.fine_number, f'Платена: {fine.amount} лв.')
+    db.session.commit()
+
+    flash(f'Глоба {fine.fine_number} е маркирана като платена.', 'success')
+    return redirect(url_for('adminBp.list_fines'))
+
+
 @adminApp.route('/fines/<int:fine_id>/reject', methods=['POST'])
 def reject_fine(fine_id):
     fine = Fine.query.get_or_404(fine_id)
-    if fine.status != 'pending':
+    if fine.status in ('paid', 'rejected'):
         flash('Глобата вече е обработена.', 'error')
         return redirect(url_for('adminBp.list_fines'))
 

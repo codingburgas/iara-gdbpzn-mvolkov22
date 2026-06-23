@@ -8,7 +8,7 @@
 {% block content %}
 <div class="inspector-wrap-narrow">
     <div class="page-header-between">
-        <a href="{{ url_for('inspectorBp.list_acts') }}" class="back-link">← Назад</a>
+        <a href="{{ url_for('inspectorBp.list_acts') }}" class="back-link">Назад</a>
         <span class="badge
             {% if act.status == 'draft' %}badge-pending
             {% elif act.status == 'submitted' %}badge-approved

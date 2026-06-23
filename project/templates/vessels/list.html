@@ -6,40 +6,45 @@
 {% endblock %}
 
 {% block content %}
-<div class="vessels-list">
-    <div class="vessels-header">
+<div class="vessels-wrap">
+    <div class="page-header-between">
         <h1>Моите кораби</h1>
-        <a href="{{ url_for('vessels.add_vessel') }}">+ Добави кораб</a>
+        <a href="{{ url_for('vessels.add_vessel') }}" class="back-link">Добави кораб</a>
     </div>
 
-    {% if vessels %}
-    <table>
-        <thead>
-            <tr>
-                <th>CFR номер</th>
-                <th>Маркировка</th>
-                <th>Позивна</th>
-                <th>Дължина</th>
-                <th>Статус</th>
-                <th>Детайли</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for vessel in vessels %}
-            <tr>
-                <td>{{ vessel.cfr_number }}</td>
-                <td>{{ vessel.marking }}</td>
-                <td>{{ vessel.call_sign or '—' }}</td>
-                <td>{{ vessel.length }} м</td>
+    <div class="vessels-card">
+        {% if vessels %}
+        <table>
+            <thead>
+                <tr>
+                    <th>CFR номер</th>
+                    <th>Маркировка</th>
+                    <th>Позивна</th>
+                    <th>Дължина</th>
+                    <th>Статус</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vessel in vessels %}
                 {% set status_label = 'Чакащ' if vessel.status == 'pending' else 'Одобрен' if vessel.status == 'approved' else 'Отхвърлен' if vessel.status == 'rejected' else 'Спрян' if vessel.status == 'suspended' else 'Отнет' if vessel.status == 'revoked' else vessel.status %}
-                <td><span class="status status-{{ vessel.status }}">{{ status_label }}</span></td>
-                <td><a href="{{ url_for('vessels.vessel_detail', vessel_id=vessel.id) }}">Преглед</a></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p>Все още нямате добавени кораби. Кликнете на "Добави нов кораб", за да започнете.</p>
-    {% endif %}
+                <tr>
+                    <td><strong>{{ vessel.cfr_number }}</strong></td>
+                    <td>{{ vessel.marking }}</td>
+                    <td>{{ vessel.call_sign or '—' }}</td>
+                    <td>{{ vessel.length }} м</td>
+                    <td><span class="badge badge-{{ 'approved' if vessel.status == 'approved' else 'pending' if vessel.status == 'pending' else 'rejected' if vessel.status == 'rejected' else 'pending' }}">{{ status_label }}</span></td>
+                    <td><a href="{{ url_for('vessels.vessel_detail', vessel_id=vessel.id) }}" class="vessel-action">Преглед</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            Все още нямате добавени кораби.<br>
+            <a href="{{ url_for('vessels.add_vessel') }}">Добавете първия си кораб</a>
+        </div>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

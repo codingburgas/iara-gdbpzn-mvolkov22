@@ -87,15 +87,6 @@
     margin-bottom: 1.5rem;
 }
 
-.back-link {
-    color: #8aa0bc;
-    text-decoration: none;
-    font-size: .85rem;
-    transition: color .2s;
-}
-.back-link:hover { color: #06b6d4; }
-
-
 .empty-state {
     text-align: center;
     padding: 3rem;

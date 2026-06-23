@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, g
-from models.models import db, VesselModel
+from models.models import db, VesselModel, Fine, PermitModel
 
 vesselsApp = Blueprint('vessels', __name__)
 
@@ -56,7 +56,9 @@ def vessel_detail(vessel_id):
         flash('Нямате достъп до този кораб.')
         return redirect(url_for('vessels.list_vessels'))
 
-    return render_template('vessels/detail.html', user=g.user, vessel=vessel)
+    fines = Fine.query.filter_by(vessel_id=vessel_id).order_by(Fine.created_at.desc()).all()
+    permits = PermitModel.query.filter_by(vessel_id=vessel_id).order_by(PermitModel.created_at.desc()).all()
+    return render_template('vessels/detail.html', user=g.user, vessel=vessel, fines=fines, permits=permits)
 
 
 @vesselsApp.route('/<int:vessel_id>/suspend', methods=['POST'])

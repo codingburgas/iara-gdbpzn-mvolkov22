@@ -3,7 +3,7 @@
 }
 
 .hidden {
-    display: none !important;
+    display: none;
 }
 
 body {
@@ -15,6 +15,32 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: white;
+    color: #374151;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.back-link::before {
+    content: "\2039";
+    font-size: 1.1rem;
+    line-height: 1;
+    color: #0e7490;
+}
+.back-link:hover {
+    border-color: #0e7490;
+    color: #0e7490;
+    background: #f0f9ff;
 }
 
 nav{
@@ -193,6 +219,11 @@ tbody td {
     color: #dc2626;
 }
 
+.badge-paid {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #059669;
+}
+
 .status {
     display: inline-block;
     padding: 0.4rem 0.8rem;
@@ -228,4 +259,24 @@ tbody td {
     padding: 1.5rem;
     margin-bottom: 1.5rem;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.text-truncate {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.text-truncate:hover {
+    overflow: visible;
+    white-space: normal;
+    word-break: break-word;
+    position: relative;
+    background: white;
+    z-index: 1;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    max-width: none;
 }

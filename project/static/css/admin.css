@@ -327,14 +327,6 @@ select:focus {
     gap: 1rem;
 }
 
-.back-link {
-    color: #8aa0bc;
-    text-decoration: none;
-    font-size: .85rem;
-    transition: color .2s;
-}
-.back-link:hover { color: #06b6d4; }
-
 .table-container {
     background: white;
     border-radius: 8px;

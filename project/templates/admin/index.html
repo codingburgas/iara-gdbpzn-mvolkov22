@@ -44,7 +44,7 @@
         <button class="tab" onclick="showTab('users', this)">Потребители</button>
         <button class="tab" onclick="showTab('fines', this)">
             Глоби
-            {% if stats.pending_fines %}<span class="tab-badge">{{ stats.pending_fines }}</span>{% endif %}
+            {% if recent_fines %}<span class="tab-badge">{{ recent_fines|length }}</span>{% endif %}
         </button>
         <button class="tab" onclick="showTab('logs', this)">Логове</button>
     </div>
@@ -238,7 +238,7 @@
             <h3 style="margin:0">Глоби</h3>
             <a href="{{ url_for('adminBp.list_fines') }}" class="btn-action btn-approve">Виж всички</a>
         </div>
-        {% if pending_fines %}
+        {% if recent_fines %}
         <table>
             <thead>
                 <tr>
@@ -246,23 +246,28 @@
                     <th>Инспектор</th>
                     <th>Кораб</th>
                     <th>Сума</th>
+                    <th>Статус</th>
                     <th>Дата</th>
                     <th>Действия</th>
                 </tr>
             </thead>
             <tbody>
-                {% for fine in pending_fines %}
+                {% for fine in recent_fines %}
+                {% set fstatus_label = 'Активна' if fine.status == 'approved' else 'Платена' if fine.status == 'paid' else 'Отхвърлена' %}
+                {% set fbadge = 'badge-approved' if fine.status == 'approved' or fine.status == 'paid' else 'badge-rejected' %}
                 <tr>
                     <td><strong>{{ fine.fine_number }}</strong></td>
-                    <td>{{ fine.inspector.full_name }}</td>
-                    <td>{{ fine.vessel.cfr_number }} / {{ fine.vessel.marking }}</td>
+                    <td class="text-truncate" title="{{ fine.inspector.full_name }}">{{ fine.inspector.full_name }}</td>
+                    <td class="text-truncate" title="{{ fine.vessel.cfr_number }} / {{ fine.vessel.marking }}">{{ fine.vessel.cfr_number }} / {{ fine.vessel.marking }}</td>
                     <td><strong>{{ fine.amount }} евро</strong></td>
+                    <td><span class="badge {{ fbadge }}">{{ fstatus_label }}</span></td>
                     <td>{{ fine.created_at.strftime('%d.%m.%Y') }}</td>
                     <td class="actions-cell">
-                        <form method="POST" action="{{ url_for('adminBp.approve_fine', fine_id=fine.id) }}" class="inline-form">
+                        {% if fine.status == 'approved' %}
+                        <form method="POST" action="{{ url_for('adminBp.mark_fine_paid', fine_id=fine.id) }}" class="inline-form">
                             <button type="submit" class="btn-action btn-approve"
-                                    onclick="return confirm('Одобри глоба {{ fine.fine_number }}?')">
-                                Одобри
+                                    onclick="return confirm('Отбележи глоба {{ fine.fine_number }} като платена?')">
+                                Отбележи платена
                             </button>
                         </form>
                         <button class="btn-action btn-reject"
@@ -279,13 +284,16 @@
                                 </button>
                             </form>
                         </div>
+                        {% else %}
+                        <a href="{{ url_for('adminBp.fine_detail', fine_id=fine.id) }}" class="btn-action btn-approve">Преглед</a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
         {% else %}
-        <div class="empty-state">Няма чакащи глоби</div>
+        <div class="empty-state">Няма глоби</div>
         {% endif %}
     </div>
 
