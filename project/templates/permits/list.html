@@ -9,16 +9,30 @@
 <div class="permits-wrap">
     <div class="list-header">
         <h1>Разрешителни</h1>
+        {% if user.role == 'user' %}
+        <a href="{{ url_for('permitsBp.request_permit') }}" class="btn-action btn-approve">+ Заяви разрешително</a>
+        {% endif %}
     </div>
 
-    {% if user.role == 'inspector' %}
     <div class="filter-bar">
+        <span class="filter-label">Филтри:</span>
         <a href="{{ url_for('permitsBp.list_permits') }}" class="filter-btn {% if not current_filter %}active{% endif %}">Всички</a>
+        <a href="{{ url_for('permitsBp.list_permits', status='pending') }}" class="filter-btn {% if current_filter == 'pending' %}active{% endif %}">Чакащи</a>
         <a href="{{ url_for('permitsBp.list_permits', status='active') }}" class="filter-btn {% if current_filter == 'active' %}active{% endif %}">Активни</a>
         <a href="{{ url_for('permitsBp.list_permits', status='expired') }}" class="filter-btn {% if current_filter == 'expired' %}active{% endif %}">Изтекли</a>
         <a href="{{ url_for('permitsBp.list_permits', status='revoked') }}" class="filter-btn {% if current_filter == 'revoked' %}active{% endif %}">Отнети</a>
+        <a href="{{ url_for('permitsBp.list_permits', status='inactive') }}" class="filter-btn {% if current_filter == 'inactive' %}active{% endif %}">Неактивни</a>
+        <a href="{{ url_for('permitsBp.list_permits', status='rejected') }}" class="filter-btn {% if current_filter == 'rejected' %}active{% endif %}">Отхвърлени</a>
     </div>
-    {% endif %}
+
+    <div class="filter-bar" style="margin-top:0.5rem">
+        <form method="GET" action="{{ url_for('permitsBp.list_permits') }}" style="display:flex;gap:0.5rem;width:100%">
+            <input type="text" name="search" value="{{ search or '' }}" placeholder="Търси по номер, кораб..." style="flex:1;padding:0.5rem;border:1px solid #cbd5e1;border-radius:6px">
+            {% if current_filter %}<input type="hidden" name="status" value="{{ current_filter }}">{% endif %}
+            <button type="submit" class="btn-action btn-approve">Търси</button>
+            {% if search %}<a href="{{ url_for('permitsBp.list_permits') }}" class="btn-action btn-reject">Изчисти</a>{% endif %}
+        </form>
+    </div>
 
     {% if permits %}
     <div class="table-wrapper permits-list">
@@ -35,13 +49,13 @@
             </thead>
             <tbody>
                 {% for permit in permits %}
-                {% set status_label = 'Активно' if permit.status == 'active' else 'Изтекло' if permit.status == 'expired' else 'Отнето' if permit.status == 'revoked' else permit.status %}
+                {% set status_label = 'Чакащо' if permit.status == 'pending' else 'Активно' if permit.status == 'active' else 'Изтекло' if permit.status == 'expired' else 'Отнето' if permit.status == 'revoked' else 'Неактивно' if permit.status == 'inactive' else 'Отхвърлено' if permit.status == 'rejected' else permit.status %}
                 <tr>
                     <td><strong>{{ permit.permit_number }}</strong></td>
                     <td>{{ permit.vessel.cfr_number }} / {{ permit.vessel.marking }}</td>
                     <td>{{ permit.issued_date.strftime('%d.%m.%Y') }}</td>
                     <td>{{ permit.valid_until.strftime('%d.%m.%Y') }}</td>
-                    <td><span class="status status-{{ permit.status }}">{{ status_label }}</span></td>
+                    <td><span class="status status-{{ 'pending' if permit.status == 'pending' else 'active' if permit.status == 'active' else 'expired' if permit.status == 'expired' else 'revoked' if permit.status == 'revoked' else 'inactive' if permit.status == 'inactive' else 'rejected' }}">{{ status_label }}</span></td>
                     <td><a href="{{ url_for('permitsBp.permit_detail', permit_id=permit.id) }}">Преглед →</a></td>
                 </tr>
                 {% endfor %}

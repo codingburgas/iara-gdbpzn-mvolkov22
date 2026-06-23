@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Всички актове{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="admin-wrap">
+    <div class="page-header-between">
+        <h1>Актове за проверка</h1>
+        <a href="{{ url_for('adminBp.index') }}" class="back-link">Админ панел</a>
+    </div>
+
+    <div class="filter-bar">
+        <span class="filter-label">Филтри:</span>
+        <a href="{{ url_for('adminBp.list_acts') }}" class="filter-btn {% if not current_filter %}active{% endif %}">Всички</a>
+        <a href="{{ url_for('adminBp.list_acts', status='confirmed') }}" class="filter-btn {% if current_filter == 'confirmed' %}active{% endif %}">Активни</a>
+        <a href="{{ url_for('adminBp.list_acts', status='resolved') }}" class="filter-btn {% if current_filter == 'resolved' %}active{% endif %}">Решени</a>
+        <a href="{{ url_for('adminBp.list_acts', status='cancelled') }}" class="filter-btn {% if current_filter == 'cancelled' %}active{% endif %}">Отменени</a>
+        <a href="{{ url_for('adminBp.export_acts_csv', status=current_filter) }}" class="filter-btn" style="margin-left:auto">CSV експорт</a>
+    </div>
+
+    <div class="table-container">
+        {% if acts %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Номер</th>
+                    <th>Инспектор</th>
+                    <th>Кораб</th>
+                    <th>Дата</th>
+                    <th>Място</th>
+                    <th>Разрешително</th>
+                    <th>Статус</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for act in acts %}
+                <tr>
+                    <td><strong>{{ act.act_number }}</strong></td>
+                    <td>{{ act.inspector.full_name }}</td>
+                    <td>{{ act.vessel.cfr_number }} / {{ act.vessel.marking }}</td>
+                    <td>{{ act.inspection_date.strftime('%d.%m.%Y') }}</td>
+                    <td>{{ act.location or '—' }}</td>
+                    <td>
+                        {% if act.related_permit %}
+                        <a href="{{ url_for('permitsBp.permit_detail', permit_id=act.related_permit.id) }}">{{ act.related_permit.permit_number }}</a>
+                        {% else %}
+                        <span style="color:#9ca3af">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% set astatus_label = 'Активен' if act.status == 'confirmed' else 'Решен' if act.status == 'resolved' else 'Отменен' %}
+                        {% set astatus_class = 'approved' if act.status == 'confirmed' else 'approved' if act.status == 'resolved' else 'rejected' %}
+                        <span class="badge badge-{{ astatus_class }}">{{ astatus_label }}</span>
+                    </td>
+                    <td class="actions-cell">
+                        {% if act.status == 'confirmed' %}
+                        <div style="display:flex;gap:0.25rem;flex-wrap:wrap">
+                        <form method="POST" action="{{ url_for('adminBp.resolve_act', act_id=act.id) }}" class="inline-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-action btn-approve"
+                                    onclick="return confirm('Отбележи акт {{ act.act_number }} като решен?')">
+                                Решен
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('adminBp.cancel_act', act_id=act.id) }}" class="inline-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-action btn-reject"
+                                    onclick="return confirm('Отмени акт {{ act.act_number }}?')">
+                                Отмени
+                            </button>
+                        </form>
+                        {% if act.related_permit and act.related_permit.status == 'active' %}
+                        <form method="POST" action="{{ url_for('permitsBp.revoke_permit', permit_id=act.related_permit.id) }}" class="inline-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="reason" value="Отнето по акт {{ act.act_number }}">
+                            <button type="submit" class="btn-action btn-reject"
+                                    onclick="return confirm('Отнеми разрешително {{ act.related_permit.permit_number }} по акт {{ act.act_number }}?')">
+                                Отнеми разрешително
+                            </button>
+                        </form>
+                        {% endif %}
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">Няма намерени актове</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

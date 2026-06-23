@@ -14,6 +14,7 @@
 
         <div class="auth-card">
             <form method="POST" action="{{ url_for('auth.register') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <div class="section-label">Лична информация</div>
 

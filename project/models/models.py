@@ -68,7 +68,7 @@ class PermitModel(db.Model):
 
     allowed_gear = db.Column(db.Text)
 
-    status = db.Column(db.Enum('active', 'expired', 'revoked'), default='active', nullable=False)
+    status = db.Column(db.Enum('pending', 'active', 'inactive', 'expired', 'revoked', 'rejected'), default='pending', nullable=False)
     revoke_reason = db.Column(db.Text)
 
     created_at = db.Column(db.DateTime, default=db.func.now())
@@ -92,16 +92,18 @@ class InspectionAct(db.Model):
     act_number = db.Column(db.String(30), unique=True, nullable=False)
     inspector_id = db.Column(db.Integer, db.ForeignKey('user_model.id'), nullable=False)
     vessel_id = db.Column(db.Integer, db.ForeignKey('vessel_model.id'), nullable=False)
+    related_permit_id = db.Column(db.Integer, db.ForeignKey('permit_model.id'), nullable=True)
     inspection_date = db.Column(db.Date, nullable=False)
     location = db.Column(db.String(200))
     findings = db.Column(db.Text)
     violations = db.Column(db.Text)
-    status = db.Column(db.Enum('draft', 'submitted', 'confirmed', 'cancelled'), default='draft', nullable=False)
+    status = db.Column(db.Enum('draft', 'submitted', 'confirmed', 'cancelled', 'resolved'), default='draft', nullable=False)
     created_at = db.Column(db.DateTime, default=db.func.now())
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
     inspector = db.relationship('UserModel', foreign_keys=[inspector_id], back_populates='inspection_acts')
     vessel = db.relationship('VesselModel', foreign_keys=[vessel_id], back_populates='inspection_acts')
+    related_permit = db.relationship('PermitModel', foreign_keys=[related_permit_id])
     fines = db.relationship('Fine', backref='act', lazy=True)
 
 

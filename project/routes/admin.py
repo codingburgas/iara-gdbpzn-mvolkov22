@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, g
-from models.models import db, VesselModel, UserModel, AdminLog, Fine, InspectionAct
+from models.models import db, VesselModel, UserModel, AdminLog, Fine, InspectionAct, PermitModel
 from datetime import datetime
 
 adminApp = Blueprint('adminBp', __name__)
@@ -12,12 +12,12 @@ def log(action, target, note=''):
 
 @adminApp.route('/')
 def index():
-    from models.models import PermitModel
-    pending = VesselModel.query.filter_by(status='pending').all()
+    pending_vessels = VesselModel.query.filter_by(status='pending').all()
     approved = VesselModel.query.filter_by(status='approved').all()
     all_users = UserModel.query.order_by(UserModel.created_at.desc()).all()
     logs = AdminLog.query.order_by(AdminLog.created_at.desc()).limit(50).all()
-    
+    pending_permits = PermitModel.query.filter_by(status='pending').all()
+
     approved_without_permit = []
     approved_with_info = []
 
@@ -45,16 +45,18 @@ def index():
                 'vessel': vessel,
                 'permit': latest_permit
             })
-    
+
     recent_fines = Fine.query.order_by(Fine.created_at.desc()).limit(10).all()
+    recent_acts = InspectionAct.query.order_by(InspectionAct.created_at.desc()).limit(10).all()
     stats = {
         'approved': VesselModel.query.filter_by(status='approved').count(),
         'rejected': VesselModel.query.filter_by(status='rejected').count(),
         'revoked':  VesselModel.query.filter_by(status='revoked').count(),
         'users':    UserModel.query.count(),
         'pending_fines': Fine.query.filter_by(status='pending').count(),
+        'pending_permits': len(pending_permits),
     }
-    return render_template('admin/index.html', user=g.user, pending=pending, approved_without_permit=approved_without_permit, approved_with_info=approved_with_info, all_users=all_users, logs=logs, stats=stats, approved_filter=approved_filter, recent_fines=recent_fines)
+    return render_template('admin/index.html', user=g.user, pending=pending_vessels, approved_without_permit=approved_without_permit, approved_with_info=approved_with_info, all_users=all_users, logs=logs, stats=stats, approved_filter=approved_filter, recent_fines=recent_fines, pending_permits=pending_permits, recent_acts=recent_acts)
 
 
 # Vessels
@@ -78,6 +80,12 @@ def reject(vessel_id):
         return redirect(url_for('adminBp.index'))
     vessel.status = 'rejected'
     vessel.admin_note = note
+
+    for permit in vessel.permits:
+        if permit.status == 'active':
+            permit.status = 'inactive'
+            permit.revoke_reason = 'Корабът е отхвърлен'
+
     log('reject', vessel.cfr_number, note)
     db.session.commit()
     flash(f'Корабът {vessel.cfr_number} е отхвърлен.', 'success')
@@ -134,16 +142,66 @@ def toggle_user(user_id):
     return redirect(url_for('adminBp.index'))
 
 
+# Acts
+
+@adminApp.route('/acts')
+def list_acts():
+    status_filter = request.args.get('status', None)
+    search = request.args.get('search', '').strip()
+    query = InspectionAct.query
+    if status_filter and status_filter in ('confirmed', 'cancelled', 'resolved'):
+        query = query.filter_by(status=status_filter)
+    if search:
+        query = query.join(VesselModel).filter(
+            db.or_(
+                InspectionAct.act_number.ilike(f'%{search}%'),
+                VesselModel.cfr_number.ilike(f'%{search}%'),
+                VesselModel.marking.ilike(f'%{search}%'),
+            )
+        )
+    acts = query.order_by(InspectionAct.created_at.desc()).all()
+    return render_template('admin/acts.html', user=g.user, acts=acts, current_filter=status_filter, search=search)
+
+
+@adminApp.route('/acts/<int:act_id>/cancel', methods=['POST'])
+def cancel_act(act_id):
+    act = InspectionAct.query.get_or_404(act_id)
+    if act.status == 'cancelled':
+        flash('Актът вече е отменен.', 'error')
+        return redirect(url_for('adminBp.list_acts'))
+
+    act.status = 'cancelled'
+
+    if act.related_permit and act.related_permit.status == 'active':
+        act.related_permit.status = 'inactive'
+        act.related_permit.revoke_reason = f'Отнето по акт {act.act_number}'
+
+    db.session.commit()
+    log('cancel_act', act.act_number, f'Акт {act.act_number} е отменен')
+    db.session.commit()
+    flash(f'Акт {act.act_number} е отменен.', 'success')
+    return redirect(url_for('adminBp.list_acts'))
+
+
 # Fines
 
 @adminApp.route('/fines')
 def list_fines():
     status_filter = request.args.get('status', None)
+    search = request.args.get('search', '').strip()
     query = Fine.query
     if status_filter and status_filter in ('pending', 'approved', 'rejected', 'paid'):
         query = query.filter_by(status=status_filter)
+    if search:
+        query = query.join(VesselModel).filter(
+            db.or_(
+                Fine.fine_number.ilike(f'%{search}%'),
+                VesselModel.cfr_number.ilike(f'%{search}%'),
+                VesselModel.marking.ilike(f'%{search}%'),
+            )
+        )
     fines = query.order_by(Fine.created_at.desc()).all()
-    return render_template('admin/fines.html', user=g.user, fines=fines, current_filter=status_filter)
+    return render_template('admin/fines.html', user=g.user, fines=fines, current_filter=status_filter, search=search)
 
 
 @adminApp.route('/fines/<int:fine_id>')
@@ -213,3 +271,88 @@ def reject_fine(fine_id):
 
     flash(f'Глоба {fine.fine_number} е отхвърлена.', 'success')
     return redirect(url_for('adminBp.list_fines'))
+
+
+# Export CSV
+
+@adminApp.route('/fines/export')
+def export_fines_csv():
+    import csv
+    from io import StringIO
+    from flask import Response
+
+    status_filter = request.args.get('status', None)
+    query = Fine.query
+    if status_filter and status_filter in ('pending', 'approved', 'rejected', 'paid'):
+        query = query.filter_by(status=status_filter)
+    fines = query.order_by(Fine.created_at.desc()).all()
+
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Номер', 'Кораб', 'Сума', 'Статус', 'Дата', 'Инспектор'])
+    for f in fines:
+        status_map = {'pending': 'Чакаща', 'approved': 'Одобрена', 'rejected': 'Отхвърлена', 'paid': 'Платена'}
+        writer.writerow([
+            f.fine_number,
+            f'{f.vessel.cfr_number} / {f.vessel.marking}',
+            f'{f.amount}',
+            status_map.get(f.status, f.status),
+            f.created_at.strftime('%d.%m.%Y'),
+            f.inspector.full_name,
+        ])
+
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment;filename=fines.csv'}
+    )
+
+
+@adminApp.route('/acts/<int:act_id>/resolve', methods=['POST'])
+def resolve_act(act_id):
+    act = InspectionAct.query.get_or_404(act_id)
+    if act.status == 'resolved':
+        flash('Актът вече е решен.', 'error')
+        return redirect(url_for('adminBp.list_acts'))
+
+    act.status = 'resolved'
+    db.session.commit()
+    log('resolve_act', act.act_number, f'Акт {act.act_number} е решен')
+    db.session.commit()
+    flash(f'Акт {act.act_number} е отбелязан като решен.', 'success')
+    return redirect(url_for('adminBp.list_acts'))
+
+
+@adminApp.route('/acts/export')
+def export_acts_csv():
+    import csv
+    from io import StringIO
+    from flask import Response
+
+    status_filter = request.args.get('status', None)
+    query = InspectionAct.query
+    if status_filter and status_filter in ('draft', 'submitted', 'confirmed', 'cancelled', 'resolved'):
+        query = query.filter_by(status=status_filter)
+    acts = query.order_by(InspectionAct.created_at.desc()).all()
+
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Номер', 'Кораб', 'Дата', 'Място', 'Статус', 'Инспектор'])
+    status_map = {'draft': 'Чернова', 'submitted': 'Изпратен', 'confirmed': 'Потвърден', 'cancelled': 'Отменен', 'resolved': 'Решен'}
+    for a in acts:
+        writer.writerow([
+            a.act_number,
+            f'{a.vessel.cfr_number} / {a.vessel.marking}',
+            a.inspection_date.strftime('%d.%m.%Y'),
+            a.location or '',
+            status_map.get(a.status, a.status),
+            a.inspector.full_name,
+        ])
+
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment;filename=acts.csv'}
+    )

@@ -14,15 +14,24 @@
 
     <div class="detail-section">
         <form method="POST">
-            <div class="form-section-title">Кораб</div>
-            <div class="form-group">
-                <label for="vessel_id">Кораб</label>
-                <select name="vessel_id" id="vessel_id" required>
-                    <option value="">— Изберете кораб —</option>
-                    {% for vessel in vessels %}
-                    <option value="{{ vessel.id }}">{{ vessel.cfr_number }} / {{ vessel.marking }} — {{ vessel.owner.full_name }}</option>
-                    {% endfor %}
-                </select>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-section-title">Кораб и разрешително</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="vessel_id">Кораб</label>
+                    <select name="vessel_id" id="vessel_id" required>
+                        <option value="">— Изберете кораб —</option>
+                        {% for vessel in vessels %}
+                        <option value="{{ vessel.id }}">{{ vessel.cfr_number }} / {{ vessel.marking }} — {{ vessel.owner.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="related_permit_id">Свързано разрешително</label>
+                    <select name="related_permit_id" id="related_permit_id">
+                        <option value="">— Без разрешително —</option>
+                    </select>
+                </div>
             </div>
 
             <div class="form-section-title spaced">Информация за проверката</div>
@@ -71,4 +80,24 @@
         </form>
     </div>
 </div>
+
+<script>
+document.getElementById('vessel_id').addEventListener('change', function() {
+    const vesselId = this.value;
+    const permitSelect = document.getElementById('related_permit_id');
+    permitSelect.innerHTML = '<option value="">— Без разрешително —</option>';
+    if (vesselId) {
+        fetch('/inspector/vessels/' + vesselId + '/permits')
+            .then(r => r.json())
+            .then(permits => {
+                permits.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.permit_number + ' — важи до ' + p.valid_until + ' — ' + p.holder;
+                    permitSelect.appendChild(opt);
+                });
+            });
+    }
+});
+</script>
 {% endblock %}

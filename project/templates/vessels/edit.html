@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Редактирай кораб {{ vessel.cfr_number }}{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/vessels.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="vessels-wrap">
+    <div class="page-header-between">
+        <a href="{{ url_for('vessels.vessel_detail', vessel_id=vessel.id) }}" class="back-link">Назад</a>
+        <h1>Редактирай кораб {{ vessel.cfr_number }}</h1>
+    </div>
+
+    <div class="vessels-card" style="padding:1.5rem">
+        <form method="POST" action="{{ url_for('vessels.edit_vessel', vessel_id=vessel.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>CFR номер</label>
+                    <input type="text" value="{{ vessel.cfr_number }}" disabled class="readonly-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="marking">Маркировка</label>
+                    <input type="text" id="marking" name="marking" value="{{ vessel.marking }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Позивна</label>
+                    <input type="text" value="{{ vessel.call_sign or '' }}" disabled class="readonly-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="length">Дължина (м)</label>
+                    <input type="number" id="length" name="length" value="{{ vessel.length }}" step="0.01" min="0.1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="width">Ширина (м)</label>
+                    <input type="number" id="width" name="width" value="{{ vessel.width or '' }}" step="0.01" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="draft">Газене (м)</label>
+                    <input type="number" id="draft" name="draft" value="{{ vessel.draft or '' }}" step="0.01" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="gross_tonnage">Тонаж (GT)</label>
+                    <input type="number" id="gross_tonnage" name="gross_tonnage" value="{{ vessel.gross_tonnage or '' }}" step="0.01" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="engine_power">Мощност (kW)</label>
+                    <input type="number" id="engine_power" name="engine_power" value="{{ vessel.engine_power or '' }}" step="0.1" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="captain_name">Капитан</label>
+                    <input type="text" id="captain_name" name="captain_name" value="{{ vessel.captain_name or '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="captain_license">Лиценз на капитана</label>
+                    <input type="text" id="captain_license" name="captain_license" value="{{ vessel.captain_license or '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="fuel_type">Гориво</label>
+                    <select id="fuel_type" name="fuel_type" required>
+                        <option value="diesel" {{ 'selected' if vessel.fuel_type == 'diesel' }}>Дизел</option>
+                        <option value="petrol" {{ 'selected' if vessel.fuel_type == 'petrol' }}>Бензин</option>
+                        <option value="electric" {{ 'selected' if vessel.fuel_type == 'electric' }}>Електрически</option>
+                        <option value="hybrid" {{ 'selected' if vessel.fuel_type == 'hybrid' }}>Хибриден</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Запази промените</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

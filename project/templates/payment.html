@@ -21,6 +21,7 @@
         </div>
 
         <form method="POST" id="payment-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="payment-methods">
                 <label class="payment-method" id="method-card">
                     <input type="radio" name="payment_method" value="card" required>

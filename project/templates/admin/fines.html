@@ -15,9 +15,19 @@
     <div class="filter-bar">
         <span class="filter-label">Филтри:</span>
         <a href="{{ url_for('adminBp.list_fines') }}" class="filter-btn {% if not current_filter %}active{% endif %}">Всички</a>
+        <a href="{{ url_for('adminBp.list_fines', status='pending') }}" class="filter-btn {% if current_filter == 'pending' %}active{% endif %}">Чакащи</a>
         <a href="{{ url_for('adminBp.list_fines', status='approved') }}" class="filter-btn {% if current_filter == 'approved' %}active{% endif %}">Активни</a>
         <a href="{{ url_for('adminBp.list_fines', status='paid') }}" class="filter-btn {% if current_filter == 'paid' %}active{% endif %}">Платени</a>
         <a href="{{ url_for('adminBp.list_fines', status='rejected') }}" class="filter-btn {% if current_filter == 'rejected' %}active{% endif %}">Отхвърлени</a>
+    </div>
+
+    <div class="filter-bar" style="margin-top:0.5rem">
+        <form method="GET" action="{{ url_for('adminBp.list_fines') }}" style="display:flex;gap:0.5rem;width:100%">
+            <input type="text" name="search" value="{{ search or '' }}" placeholder="Търси по номер, кораб..." style="flex:1;padding:0.5rem;border:1px solid #cbd5e1;border-radius:6px">
+            <button type="submit" class="btn-action btn-approve">Търси</button>
+            {% if search %}<a href="{{ url_for('adminBp.list_fines') }}" class="btn-action btn-reject">Изчисти</a>{% endif %}
+        </form>
+        <a href="{{ url_for('adminBp.export_fines_csv', status=current_filter) }}" class="filter-btn" style="margin-left:auto">CSV експорт</a>
     </div>
 
     <div class="table-container">
@@ -42,14 +52,15 @@
                     <td class="text-truncate" title="{{ fine.vessel.cfr_number }} / {{ fine.vessel.marking }}">{{ fine.vessel.cfr_number }} / {{ fine.vessel.marking }}</td>
                     <td><strong>{{ fine.amount }} евро</strong></td>
                     <td>
-                        {% set fine_status = 'Активна' if fine.status == 'approved' else 'Платена' if fine.status == 'paid' else 'Отхвърлена' %}
-                        {% set status_class = 'status-active' if fine.status == 'approved' else 'status-active' if fine.status == 'paid' else 'status-revoked' %}
+                        {% set fine_status = 'Чакаща' if fine.status == 'pending' else 'Активна' if fine.status == 'approved' else 'Платена' if fine.status == 'paid' else 'Отхвърлена' %}
+                        {% set status_class = 'status-pending' if fine.status == 'pending' else 'status-active' if fine.status == 'approved' else 'status-active' if fine.status == 'paid' else 'status-revoked' %}
                         <span class="status {{ status_class }}">{{ fine_status }}</span>
                     </td>
                     <td>{{ fine.created_at.strftime('%d.%m.%Y') }}</td>
                     <td class="actions-cell">
                         {% if fine.status == 'approved' %}
                         <form method="POST" action="{{ url_for('adminBp.mark_fine_paid', fine_id=fine.id) }}" class="inline-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn-action btn-approve"
                                     onclick="return confirm('Отбележи глоба {{ fine.fine_number }} като платена?')">
                                 Отбележи платена
@@ -60,8 +71,8 @@
                             Отхвърли
                         </button>
                         <div id="reject-{{ fine.id }}" class="note-form hidden">
-                            <form method="POST"
-                                  action="{{ url_for('adminBp.reject_fine', fine_id=fine.id) }}">
+                            <form method="POST" action="{{ url_for('adminBp.reject_fine', fine_id=fine.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="text" name="note"
                                        placeholder="Причина за отхвърляне" required>
                                 <button type="submit" class="btn-action btn-reject">
@@ -74,6 +85,7 @@
                         <a href="{{ url_for('adminBp.fine_detail', fine_id=fine.id) }}" class="btn-action btn-approve">Преглед</a>
                         {% else %}
                         <form method="POST" action="{{ url_for('adminBp.approve_fine', fine_id=fine.id) }}" class="inline-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn-action btn-approve"
                                     onclick="return confirm('Одобри глоба {{ fine.fine_number }}?')">
                                 Одобри
@@ -84,8 +96,8 @@
                             Отхвърли
                         </button>
                         <div id="reject-{{ fine.id }}" class="note-form hidden">
-                            <form method="POST"
-                                  action="{{ url_for('adminBp.reject_fine', fine_id=fine.id) }}">
+                            <form method="POST" action="{{ url_for('adminBp.reject_fine', fine_id=fine.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="text" name="note"
                                        placeholder="Причина за отхвърляне" required>
                                 <button type="submit" class="btn-action btn-reject">

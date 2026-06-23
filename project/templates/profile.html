@@ -92,13 +92,13 @@
             </thead>
             <tbody>
                 {% for permit in permits %}
-                {% set pstatus_label = 'Активно' if permit.status == 'active' else 'Изтекло' if permit.status == 'expired' else 'Отнето' %}
+                {% set pstatus_label = 'Чакащо' if permit.status == 'pending' else 'Активно' if permit.status == 'active' else 'Изтекло' if permit.status == 'expired' else 'Отнето' if permit.status == 'revoked' else 'Неактивно' if permit.status == 'inactive' else 'Отхвърлено' %}
                 <tr>
                     <td><strong>{{ permit.permit_number }}</strong></td>
                     <td>{{ permit.vessel.cfr_number }}</td>
                     <td>{{ permit.issued_date.strftime('%d.%m.%Y') }}</td>
                     <td>{{ permit.valid_until.strftime('%d.%m.%Y') }}</td>
-                    <td><span class="badge badge-{{ 'approved' if permit.status == 'active' else 'rejected' if permit.status == 'revoked' else 'pending' }}">{{ pstatus_label }}</span></td>
+                    <td><span class="badge badge-{{ 'pending' if permit.status in ('pending', 'expired') else 'approved' if permit.status == 'active' else 'rejected' if permit.status in ('revoked', 'rejected', 'inactive') else 'pending' }}">{{ pstatus_label }}</span></td>
                     <td><a href="{{ url_for('permitsBp.permit_detail', permit_id=permit.id) }}" class="btn-link">Преглед</a></td>
                 </tr>
                 {% endfor %}
@@ -170,8 +170,8 @@
             </thead>
             <tbody>
                 {% for act in acts[:10] %}
-                {% set astatus_label = 'Чернова' if act.status == 'draft' else 'Изпратен' if act.status == 'submitted' else 'Потвърден' if act.status == 'confirmed' else 'Отменен' %}
-                {% set astatus_class = 'pending' if act.status == 'draft' else 'approved' if act.status == 'submitted' else 'approved' if act.status == 'confirmed' else 'rejected' %}
+                {% set astatus_label = 'Чернова' if act.status == 'draft' else 'Изпратен' if act.status == 'submitted' else 'Потвърден' if act.status == 'confirmed' else 'Решен' if act.status == 'resolved' else 'Отменен' %}
+                {% set astatus_class = 'pending' if act.status == 'draft' else 'approved' if act.status == 'submitted' else 'approved' if act.status in ('confirmed', 'resolved') else 'rejected' %}
                 <tr>
                     <td><strong>{{ act.act_number }}</strong></td>
                     <td>{{ act.vessel.cfr_number }}</td>

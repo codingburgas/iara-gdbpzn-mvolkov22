@@ -15,10 +15,18 @@
     <div class="filter-bar">
         <span class="filter-label">Филтри:</span>
         <a href="{{ url_for('inspectorBp.list_acts') }}" class="filter-btn {% if not current_filter %}active{% endif %}">Всички</a>
-        <a href="{{ url_for('inspectorBp.list_acts', status='draft') }}" class="filter-btn {% if current_filter == 'draft' %}active{% endif %}">Чернови</a>
-        <a href="{{ url_for('inspectorBp.list_acts', status='submitted') }}" class="filter-btn {% if current_filter == 'submitted' %}active{% endif %}">Изпратени</a>
-        <a href="{{ url_for('inspectorBp.list_acts', status='confirmed') }}" class="filter-btn {% if current_filter == 'confirmed' %}active{% endif %}">Потвърдени</a>
+        <a href="{{ url_for('inspectorBp.list_acts', status='confirmed') }}" class="filter-btn {% if current_filter == 'confirmed' %}active{% endif %}">Активни</a>
+        <a href="{{ url_for('inspectorBp.list_acts', status='resolved') }}" class="filter-btn {% if current_filter == 'resolved' %}active{% endif %}">Решени</a>
         <a href="{{ url_for('inspectorBp.list_acts', status='cancelled') }}" class="filter-btn {% if current_filter == 'cancelled' %}active{% endif %}">Отменени</a>
+    </div>
+
+    <div class="filter-bar" style="margin-top:0.5rem">
+        <form method="GET" action="{{ url_for('inspectorBp.list_acts') }}" style="display:flex;gap:0.5rem;width:100%">
+            <input type="text" name="search" value="{{ search or '' }}" placeholder="Търси по номер, кораб..." style="flex:1;padding:0.5rem;border:1px solid #cbd5e1;border-radius:6px">
+            {% if current_filter %}<input type="hidden" name="status" value="{{ current_filter }}">{% endif %}
+            <button type="submit" class="btn-action btn-approve">Търси</button>
+            {% if search %}<a href="{{ url_for('inspectorBp.list_acts') }}" class="btn-action btn-reject">Изчисти</a>{% endif %}
+        </form>
     </div>
 
     <div class="table-container">
@@ -43,8 +51,8 @@
                     <td>{{ act.inspection_date.strftime('%d.%m.%Y') }}</td>
                     <td>{{ act.location or '—' }}</td>
                     <td>
-                        {% set act_status = 'Чернова' if act.status == 'draft' else 'Изпратен' if act.status == 'submitted' else 'Потвърден' if act.status == 'confirmed' else 'Отменен' %}
-                        {% set status_class = 'status-pending' if act.status == 'draft' else 'status-active' if act.status == 'submitted' else 'status-approved' if act.status == 'confirmed' else 'status-revoked' %}
+                        {% set act_status = 'Активен' if act.status == 'confirmed' else 'Решен' if act.status == 'resolved' else 'Отменен' %}
+                        {% set status_class = 'status-approved' if act.status == 'confirmed' else 'status-approved' if act.status == 'resolved' else 'status-revoked' %}
                         <span class="status {{ status_class }}">{{ act_status }}</span>
                     </td>
                     <td>

@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, g
-from models.models import db, InspectionAct, Fine, VesselModel, AdminLog
+from flask import Blueprint, render_template, request, redirect, url_for, flash, g, jsonify
+from models.models import db, InspectionAct, Fine, VesselModel, AdminLog, PermitModel
 from datetime import date
 
 inspectorApp = Blueprint('inspectorBp', __name__)
@@ -33,11 +33,20 @@ def list_acts():
         return redirect(url_for('index'))
 
     status_filter = request.args.get('status', None)
+    search = request.args.get('search', '').strip()
     query = InspectionAct.query.filter_by(inspector_id=g.user.id)
-    if status_filter and status_filter in ('draft', 'submitted', 'confirmed', 'cancelled'):
+    if status_filter and status_filter in ('confirmed', 'cancelled', 'resolved'):
         query = query.filter_by(status=status_filter)
+    if search:
+        query = query.join(VesselModel).filter(
+            db.or_(
+                InspectionAct.act_number.ilike(f'%{search}%'),
+                VesselModel.cfr_number.ilike(f'%{search}%'),
+                VesselModel.marking.ilike(f'%{search}%'),
+            )
+        )
     acts = query.order_by(InspectionAct.created_at.desc()).all()
-    return render_template('inspector/acts_list.html', user=g.user, acts=acts, current_filter=status_filter)
+    return render_template('inspector/acts_list.html', user=g.user, acts=acts, current_filter=status_filter, search=search)
 
 
 @inspectorApp.route('/acts/create', methods=['GET', 'POST'])
@@ -50,15 +59,18 @@ def create_act():
         vessel_id = request.form.get('vessel_id', type=int)
         vessel = VesselModel.query.get_or_404(vessel_id)
 
+        related_permit_id = request.form.get('related_permit_id', type=int) or None
+
         act = InspectionAct(
             act_number=generate_act_number(),
             inspector_id=g.user.id,
             vessel_id=vessel_id,
+            related_permit_id=related_permit_id,
             inspection_date=date.fromisoformat(request.form['inspection_date']),
             location=request.form.get('location', ''),
             findings=request.form.get('findings', ''),
             violations=request.form.get('violations', ''),
-            status='draft',
+            status='confirmed',
         )
         db.session.add(act)
         db.session.flush()
@@ -100,35 +112,17 @@ def act_detail(act_id):
     return render_template('inspector/act_detail.html', user=g.user, act=act)
 
 
-@inspectorApp.route('/acts/<int:act_id>/submit', methods=['POST'])
-def submit_act(act_id):
+@inspectorApp.route('/vessels/<int:vessel_id>/permits')
+def vessel_permits_json(vessel_id):
     if g.user.role not in ('inspector', 'admin'):
-        flash('Нямате достъп до тази страница.', 'error')
-        return redirect(url_for('index'))
-
-    act = InspectionAct.query.get_or_404(act_id)
-    if act.inspector_id != g.user.id:
-        flash('Нямате достъп до този акт.', 'error')
-        return redirect(url_for('inspectorBp.list_acts'))
-
-    if act.status != 'draft':
-        flash('Актът вече е изпратен.', 'error')
-        return redirect(url_for('inspectorBp.act_detail', act_id=act_id))
-
-    act.status = 'submitted'
-    db.session.commit()
-
-    log_entry = AdminLog(
-        admin_id=g.user.id,
-        action='submit_act',
-        target=act.act_number,
-        note=f'Акт за проверка на кораб {act.vessel.cfr_number}'
-    )
-    db.session.add(log_entry)
-    db.session.commit()
-
-    flash(f'Акт {act.act_number} е изпратен за обработка.', 'success')
-    return redirect(url_for('inspectorBp.act_detail', act_id=act_id))
+        return jsonify([])
+    permits = PermitModel.query.filter_by(vessel_id=vessel_id, status='active').all()
+    return jsonify([{
+        'id': p.id,
+        'permit_number': p.permit_number,
+        'valid_until': p.valid_until.strftime('%d.%m.%Y'),
+        'holder': p.holder.full_name,
+    } for p in permits])
 
 
 @inspectorApp.route('/acts/<int:act_id>/cancel', methods=['POST'])
@@ -138,17 +132,37 @@ def cancel_act(act_id):
         return redirect(url_for('index'))
 
     act = InspectionAct.query.get_or_404(act_id)
-    if act.inspector_id != g.user.id:
-        flash('Нямате достъп до този акт.', 'error')
-        return redirect(url_for('inspectorBp.list_acts'))
 
-    if act.status != 'draft':
-        flash('Може да отмените само чернови.', 'error')
+    if act.status == 'cancelled':
+        flash('Актът вече е отменен.', 'error')
         return redirect(url_for('inspectorBp.act_detail', act_id=act_id))
 
     act.status = 'cancelled'
+
+    if act.related_permit and act.related_permit.status == 'active':
+        act.related_permit.status = 'inactive'
+        act.related_permit.revoke_reason = f'Отнето по акт {act.act_number}'
+
     db.session.commit()
     flash(f'Акт {act.act_number} е отменен.', 'success')
+    return redirect(url_for('inspectorBp.list_acts'))
+
+
+@inspectorApp.route('/acts/<int:act_id>/resolve', methods=['POST'])
+def resolve_act(act_id):
+    if g.user.role not in ('inspector', 'admin'):
+        flash('Нямате достъп до тази страница.', 'error')
+        return redirect(url_for('index'))
+
+    act = InspectionAct.query.get_or_404(act_id)
+
+    if act.status == 'resolved':
+        flash('Актът вече е решен.', 'error')
+        return redirect(url_for('inspectorBp.act_detail', act_id=act_id))
+
+    act.status = 'resolved'
+    db.session.commit()
+    flash(f'Акт {act.act_number} е отбелязан като решен.', 'success')
     return redirect(url_for('inspectorBp.list_acts'))
 
 
@@ -167,15 +181,18 @@ def create_fine():
             flash('Моля, въведете валидна сума на глобата.', 'error')
             return redirect(url_for('inspectorBp.create_fine'))
 
+        related_permit_id = request.form.get('related_permit_id', type=int) or None
+
         act = InspectionAct(
             act_number=generate_act_number(),
             inspector_id=g.user.id,
             vessel_id=vessel_id,
+            related_permit_id=related_permit_id,
             inspection_date=date.today(),
             location=request.form.get('location', ''),
             findings='Автоматично създаден акт за глоба',
             violations=request.form.get('violation_description', ''),
-            status='draft',
+            status='confirmed',
         )
         db.session.add(act)
         db.session.flush()
@@ -208,11 +225,20 @@ def list_fines():
         return redirect(url_for('index'))
 
     status_filter = request.args.get('status', None)
+    search = request.args.get('search', '').strip()
     query = Fine.query.filter_by(inspector_id=g.user.id)
     if status_filter and status_filter in ('approved', 'paid', 'rejected'):
         query = query.filter_by(status=status_filter)
+    if search:
+        query = query.join(VesselModel).filter(
+            db.or_(
+                Fine.fine_number.ilike(f'%{search}%'),
+                VesselModel.cfr_number.ilike(f'%{search}%'),
+                VesselModel.marking.ilike(f'%{search}%'),
+            )
+        )
     fines = query.order_by(Fine.created_at.desc()).all()
-    return render_template('inspector/fines_list.html', user=g.user, fines=fines, current_filter=status_filter)
+    return render_template('inspector/fines_list.html', user=g.user, fines=fines, current_filter=status_filter, search=search)
 
 
 @inspectorApp.route('/fines/<int:fine_id>')

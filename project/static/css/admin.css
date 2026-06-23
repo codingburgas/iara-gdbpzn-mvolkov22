@@ -19,11 +19,12 @@
 }
 
 .stat-card {
-    background: rgba(17,34,64,.7);
-    border: 1px solid #1e3a5f;
+    background: white;
+    border: 1px solid #e5e7eb;
     border-radius: 8px;
     padding: 1.25rem;
     text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .stat-number {
@@ -32,10 +33,65 @@
     line-height: 1;
 }
 
-.stat-number.pending  { color: #f0c040; }
-.stat-number.approved { color: #34d399; }
-.stat-number.rejected { color: #fca5a5; }
-.stat-number.users { color: #06b6d4; }
+.stat-number.pending  { color: #b45309; }
+.stat-number.approved { color: #059669; }
+.stat-number.rejected { color: #dc2626; }
+.stat-number.users { color: #0284c7; }
+
+.stat-label {
+    font-size: .75rem;
+    color: #6b7280;
+    margin-top: .35rem;
+}
+
+/* standalone filter bar (for /admin/acts, /admin/fines etc) */
+.admin-wrap .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    align-items: center;
+    margin-bottom: 1.4rem;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.admin-wrap .filter-bar .filter-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #334155;
+    margin-right: 0.5rem;
+}
+
+.admin-wrap .filter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.65rem 1rem;
+    border-radius: 999px;
+    border: 1px solid #cbd5e1;
+    background: white;
+    color: #334155;
+    text-decoration: none;
+    font-size: 0.84rem;
+    font-weight: 600;
+    transition: all 0.18s ease;
+}
+
+.admin-wrap .filter-btn:hover {
+    border-color: #0e7490;
+    background: #eff6ff;
+    color: #0e7490;
+}
+
+.admin-wrap .filter-btn.active {
+    background: #0e7490;
+    border-color: #0e7490;
+    color: white;
+    box-shadow: 0 6px 16px rgba(14,116,144,0.18);
+}
 
 .inline-form {
     display: inline;
@@ -53,11 +109,11 @@
 
 .self-label {
     font-size: .8rem;
-    color: #8aa0bc;
+    color: #6b7280;
 }
 
 .log-note {
-    color: #8aa0bc;
+    color: #6b7280;
     font-size: .82rem;
 }
 
@@ -65,25 +121,19 @@
     display: none;
 }
 
-.stat-label {
-    font-size: .75rem;
-    color: #8aa0bc;
-    margin-top: .35rem;
-}
-
 .tabs {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 1.25rem;
-    border-bottom: 1px solid #1e3a5f;
+    border-bottom: 1px solid #e2e8f0;
     padding-bottom: 0.75rem;
 }
 
 .tab {
     background: none;
-    border: 1px solid #1e3a5f;
+    border: 1px solid #d1d5db;
     border-radius: 5px;
-    color: #8aa0bc;
+    color: #6b7280;
     padding: 0.5rem 1.1rem;
     font-size: 0.85rem;
     cursor: pointer;
@@ -94,7 +144,7 @@
     gap: 0.4rem;
 }
 
-.tab:hover { border-color: #0e7490; color: #e2e8f0; }
+.tab:hover { border-color: #0e7490; color: #0e7490; }
 
 .tab.active {
     background: #0e7490;
@@ -104,7 +154,7 @@
 
 .tab-badge {
     background: #f0c040;
-    color: #0a1628;
+    color: white;
     font-size: 0.7rem;
     font-weight: 700;
     padding: 0.1rem 0.4rem;
@@ -112,64 +162,84 @@
 }
 
 .btn-action {
-    padding: 0.3rem 0.7rem;
-    border-radius: 4px;
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
     font-size: 0.8rem;
+    font-weight: 600;
     font-family: inherit;
     cursor: pointer;
     border: 1px solid transparent;
     transition: all 0.15s;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .btn-approve {
     background: rgba(16,185,129,.15);
     border-color: rgba(16,185,129,.4);
-    color: #34d399;
+    color: #059669;
 }
 .btn-approve:hover { background: rgba(16,185,129,.25); }
 
 .btn-reject {
-    background: rgba(224,82,82,.15);
-    border-color: rgba(224,82,82,.4);
-    color: #fca5a5;
+    background: rgba(239,68,68,.1);
+    border-color: rgba(239,68,68,.3);
+    color: #dc2626;
 }
-.btn-reject:hover { background: rgba(224,82,82,.25); }
+.btn-reject:hover { background: rgba(239,68,68,.2); }
 
 .note-form {
-    margin-top: 0.5rem;
+    background: #f9fafb;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-top: 0.75rem;
 }
 
 .note-form input {
     width: 100%;
-    margin-bottom: 0.4rem;
-    padding: 0.4rem 0.6rem;
-    background: rgba(10,22,40,.8);
-    border: 1px solid #1e3a5f;
+    margin-bottom: 0.6rem;
+    padding: 0.6rem 0.8rem;
+    background: white;
+    border: 1px solid #e5e7eb;
     border-radius: 4px;
-    color: #e2e8f0;
+    color: #374151;
     font-family: inherit;
-    font-size: 0.8rem;
+    font-size: 0.875rem;
     outline: none;
 }
 
+.note-form input:focus {
+    border-color: #0e7490;
+    box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1);
+}
+
+.note-form button {
+    width: 100%;
+}
+
 select {
-    background: rgba(10,22,40,.8);
-    border: 1px solid #1e3a5f;
+    background: white;
+    border: 1px solid #e5e7eb;
     border-radius: 4px;
-    color: #e2e8f0;
-    padding: .3rem .5rem;
-    font-size: .82rem;
+    color: #374151;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
     font-family: inherit;
     outline: none;
     cursor: pointer;
 }
 
+select:focus {
+    border-color: #0e7490;
+    box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1);
+}
+
 .empty-state {
     text-align: center;
     padding: 2.5rem;
-    color: #8aa0bc;
-    background: rgba(17,34,64,.4);
-    border: 1px dashed #1e3a5f;
+    color: #6b7280;
+    background: white;
+    border: 1px dashed #d1d5db;
     border-radius: 8px;
     font-size: 0.9rem;
 }
@@ -235,7 +305,6 @@ select {
     }
 }
 
-
 .tab-content table {
     margin: 0;
     box-shadow: none;
@@ -268,54 +337,8 @@ select {
 .tab-content .btn-action {
     padding: 0.4rem 0.9rem;
     font-size: 0.8rem;
-    border-radius: 4px;
-    white-space: nowrap;
-}
-
-.note-form {
-    background: rgba(17,34,64,.1);
-    padding: 1rem;
     border-radius: 6px;
-    margin-top: 0.75rem;
-}
-
-.note-form input {
-    width: 100%;
-    margin-bottom: 0.6rem;
-    padding: 0.6rem 0.8rem;
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 4px;
-    color: #374151;
-    font-family: inherit;
-    font-size: 0.875rem;
-    outline: none;
-}
-
-.note-form input:focus {
-    border-color: #0e7490;
-    box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1);
-}
-
-.note-form button {
-    width: 100%;
-}
-
-select {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 4px;
-    color: #374151;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-    font-family: inherit;
-    outline: none;
-    cursor: pointer;
-}
-
-select:focus {
-    border-color: #0e7490;
-    box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1);
+    white-space: nowrap;
 }
 
 .page-header-between {

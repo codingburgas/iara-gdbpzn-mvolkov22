@@ -1,4 +1,7 @@
+import os
 from flask import Flask, redirect, render_template, session, request, url_for, flash, g
+from flask_wtf.csrf import CSRFProtect
+from apscheduler.schedulers.background import BackgroundScheduler
 from models.models import db, UserModel as User
 from datetime import datetime
 from routes.auth import authApp as authBp
@@ -7,10 +10,16 @@ from routes.vessels import vesselsApp as vesselsBp
 from routes.permits import permitsApp as permitsApp
 from routes.inspector import inspectorApp as inspectorBp
 from database import config
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback-secret-key')
 app.config['SQLALCHEMY_DATABASE_URI'] = config.DATABASE_CONNECTION_URI
+app.config['WTF_CSRF_TIME_LIMIT'] = None
+
+csrf = CSRFProtect(app)
 
 db.init_app(app)
 with app.app_context():
@@ -22,6 +31,25 @@ app.register_blueprint(adminBp, url_prefix='/admin')
 app.register_blueprint(vesselsBp, url_prefix='/vessels')
 app.register_blueprint(permitsApp, url_prefix='/permits')
 app.register_blueprint(inspectorBp, url_prefix='/inspector')
+
+
+def expire_permits_job():
+    with app.app_context():
+        from models.models import PermitModel
+        from datetime import date
+        today = date.today()
+        expired = PermitModel.query.filter(
+            PermitModel.status == 'active',
+            PermitModel.valid_until < today
+        ).all()
+        for permit in expired:
+            permit.status = 'expired'
+        db.session.commit()
+
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(expire_permits_job, 'interval', hours=1, id='expire_permits')
+scheduler.start()
 
 
 # limit access to certain routes based on authentication and role

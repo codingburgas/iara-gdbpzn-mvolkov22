@@ -20,6 +20,15 @@
         <a href="{{ url_for('inspectorBp.list_fines', status='rejected') }}" class="filter-btn {% if current_filter == 'rejected' %}active{% endif %}">Отхвърлени</a>
     </div>
 
+    <div class="filter-bar" style="margin-top:0.5rem">
+        <form method="GET" action="{{ url_for('inspectorBp.list_fines') }}" style="display:flex;gap:0.5rem;width:100%">
+            <input type="text" name="search" value="{{ search or '' }}" placeholder="Търси по номер, кораб..." style="flex:1;padding:0.5rem;border:1px solid #cbd5e1;border-radius:6px">
+            {% if current_filter %}<input type="hidden" name="status" value="{{ current_filter }}">{% endif %}
+            <button type="submit" class="btn-action btn-approve">Търси</button>
+            {% if search %}<a href="{{ url_for('inspectorBp.list_fines') }}" class="btn-action btn-reject">Изчисти</a>{% endif %}
+        </form>
+    </div>
+
     <div class="detail-section">
         {% if fines %}
         <table>

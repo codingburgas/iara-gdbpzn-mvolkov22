@@ -224,6 +224,11 @@ tbody td {
     color: #059669;
 }
 
+.badge-info {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #2563eb;
+}
+
 .status {
     display: inline-block;
     padding: 0.4rem 0.8rem;
@@ -250,6 +255,16 @@ tbody td {
 .status-revoked {
     background: rgba(239, 68, 68, 0.15);
     color: #dc2626;
+}
+
+.status-rejected {
+    background: rgba(239, 68, 68, 0.15);
+    color: #dc2626;
+}
+
+.status-inactive {
+    background: rgba(107, 114, 128, 0.15);
+    color: #6b7280;
 }
 
 .card {

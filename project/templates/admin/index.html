@@ -10,7 +10,7 @@
 
     <div class="admin-header">
         <h1>Админ панел</h1>
-        <a href="{{ url_for('permitsBp.issue_permit') }}" class="btn-action btn-approve">+ Издай разрешително</a>
+        <span style="font-size:0.875rem;color:#6b7280">Управление на заявки и потребители</span>
     </div>
 
     <div class="stats-grid">
@@ -30,6 +30,10 @@
             <div class="stat-number users">{{ stats.users }}</div>
             <div class="stat-label">Потребители</div>
         </div>
+        <div class="stat-card">
+            <div class="stat-number {% if pending_permits %}pending{% else %}users{% endif %}">{{ stats.pending_permits }}</div>
+            <div class="stat-label">Чакащи разрешителни</div>
+        </div>
     </div>
 
     <div class="tabs">
@@ -41,11 +45,16 @@
             Одобрени кораби
             {% if stats.approved %}<span class="tab-badge">{{ stats.approved }}</span>{% endif %}
         </button>
+        <button class="tab" onclick="showTab('permits', this)">
+            Разрешителни
+            {% if pending_permits %}<span class="tab-badge">{{ pending_permits|length }}</span>{% endif %}
+        </button>
         <button class="tab" onclick="showTab('users', this)">Потребители</button>
         <button class="tab" onclick="showTab('fines', this)">
             Глоби
             {% if recent_fines %}<span class="tab-badge">{{ recent_fines|length }}</span>{% endif %}
         </button>
+        <button class="tab" onclick="showTab('acts', this)">Актове</button>
         <button class="tab" onclick="showTab('logs', this)">Логове</button>
     </div>
 
@@ -72,9 +81,8 @@
                     <td>{{ vessel.length }} м</td>
                     <td>{{ vessel.created_at.strftime('%d.%m.%Y') }}</td>
                     <td class="actions-cell">
-                        <form method="POST"
-                              action="{{ url_for('adminBp.approve', vessel_id=vessel.id) }}"
-                              class="inline-form">
+                        <form method="POST" action="{{ url_for('adminBp.approve', vessel_id=vessel.id) }}" class="inline-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn-action btn-approve"
                                     onclick="return confirm('Одобри {{ vessel.cfr_number }}?')">
                                 Одобри
@@ -87,8 +95,8 @@
                         </button>
 
                         <div id="reject-{{ vessel.id }}" class="note-form hidden">
-                            <form method="POST"
-                                  action="{{ url_for('adminBp.reject', vessel_id=vessel.id) }}">
+                            <form method="POST" action="{{ url_for('adminBp.reject', vessel_id=vessel.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="text" name="note"
                                        placeholder="Причина за отказ" required>
                                 <button type="submit" class="btn-action btn-reject">
@@ -173,6 +181,64 @@
         {% endif %}
     </div>
 
+    <!-- Permits tab -->
+    <div id="tab-permits" class="tab-content hidden">
+        <div class="page-header-between" style="margin-bottom:1rem">
+            <h3 style="margin:0">Чакащи заявки за разрешителни</h3>
+            <a href="{{ url_for('permitsBp.list_permits') }}" class="btn-action btn-approve">Виж всички</a>
+        </div>
+        {% if pending_permits %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Номер</th>
+                    <th>Заявител</th>
+                    <th>Кораб</th>
+                    <th>Важи до</th>
+                    <th>Дата</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for permit in pending_permits %}
+                <tr>
+                    <td><strong>{{ permit.permit_number }}</strong></td>
+                    <td>{{ permit.holder.full_name }}</td>
+                    <td>{{ permit.vessel.cfr_number }} / {{ permit.vessel.marking }}</td>
+                    <td>{{ permit.valid_until.strftime('%d.%m.%Y') }}</td>
+                    <td>{{ permit.created_at.strftime('%d.%m.%Y') }}</td>
+                    <td class="actions-cell">
+                        <form method="POST" action="{{ url_for('permitsBp.approve_permit', permit_id=permit.id) }}" class="inline-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-action btn-approve"
+                                    onclick="return confirm('Одобри {{ permit.permit_number }}?')">
+                                Одобри
+                            </button>
+                        </form>
+                        <button class="btn-action btn-reject"
+                                onclick="toggleNote('rej-perm-{{ permit.id }}')">
+                            Отхвърли
+                        </button>
+                        <div id="rej-perm-{{ permit.id }}" class="note-form hidden">
+                            <form method="POST" action="{{ url_for('permitsBp.reject_permit', permit_id=permit.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="text" name="reason"
+                                       placeholder="Причина за отхвърляне" required>
+                                <button type="submit" class="btn-action btn-reject">
+                                    Потвърди
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">Няма чакащи заявки за разрешителни</div>
+        {% endif %}
+    </div>
+
     <!-- Users tab -->
     <div id="tab-users" class="tab-content hidden">
         <table>
@@ -193,9 +259,8 @@
                     <td>{{ u.email }}</td>
                     <td>{{ u.relationships|length }}</td>
                     <td>
-                        <form method="POST"
-                              action="{{ url_for('adminBp.change_role', user_id=u.id) }}"
-                              class="user-role-form">
+                        <form method="POST" action="{{ url_for('adminBp.change_role', user_id=u.id) }}" class="user-role-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <select name="role">
                                 <option value="user"
                                     {% if u.role == 'user' %}selected{% endif %}>Потребител</option>
@@ -214,9 +279,8 @@
                     </td>
                     <td class="actions-cell">
                         {% if u.id != user.id %}
-                        <form method="POST"
-                              action="{{ url_for('adminBp.toggle_user', user_id=u.id) }}"
-                              class="no-margin-form">
+                        <form method="POST" action="{{ url_for('adminBp.toggle_user', user_id=u.id) }}" class="no-margin-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit"
                                     class="btn-action {% if u.is_active %}btn-reject{% else %}btn-approve{% endif %}">
                                 {{ 'Блокирай' if u.is_active else 'Активирай' }}
@@ -265,6 +329,7 @@
                     <td class="actions-cell">
                         {% if fine.status == 'approved' %}
                         <form method="POST" action="{{ url_for('adminBp.mark_fine_paid', fine_id=fine.id) }}" class="inline-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn-action btn-approve"
                                     onclick="return confirm('Отбележи глоба {{ fine.fine_number }} като платена?')">
                                 Отбележи платена
@@ -275,8 +340,8 @@
                             Отхвърли
                         </button>
                         <div id="reject-{{ fine.id }}" class="note-form hidden">
-                            <form method="POST"
-                                  action="{{ url_for('adminBp.reject_fine', fine_id=fine.id) }}">
+                            <form method="POST" action="{{ url_for('adminBp.reject_fine', fine_id=fine.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="text" name="note"
                                        placeholder="Причина за отхвърляне" required>
                                 <button type="submit" class="btn-action btn-reject">
@@ -297,6 +362,48 @@
         {% endif %}
     </div>
 
+    <!-- Acts tab -->
+    <div id="tab-acts" class="tab-content hidden">
+        <div class="page-header-between" style="margin-bottom:1rem">
+            <h3 style="margin:0">Актове за проверка</h3>
+            <a href="{{ url_for('adminBp.list_acts') }}" class="btn-action btn-approve">Виж всички</a>
+        </div>
+        {% if recent_acts %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Номер</th>
+                    <th>Инспектор</th>
+                    <th>Кораб</th>
+                    <th>Дата</th>
+                    <th>Статус</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for act in recent_acts %}
+                <tr>
+                    <td><strong>{{ act.act_number }}</strong></td>
+                    <td>{{ act.inspector.full_name }}</td>
+                    <td>{{ act.vessel.cfr_number }} / {{ act.vessel.marking }}</td>
+                    <td>{{ act.inspection_date.strftime('%d.%m.%Y') }}</td>
+                    <td>
+                        {% set alabel = 'Активен' if act.status == 'confirmed' else 'Решен' if act.status == 'resolved' else 'Отменен' %}
+                        {% set aclass = 'badge-approved' if act.status in ('confirmed', 'resolved') else 'badge-rejected' %}
+                        <span class="badge {{ aclass }}">{{ alabel }}</span>
+                    </td>
+                    <td class="actions-cell">
+                        <a href="{{ url_for('inspectorBp.act_detail', act_id=act.id) }}" class="btn-action btn-approve">Преглед</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">Няма актове за проверка</div>
+        {% endif %}
+    </div>
+
     <!-- Logs tab -->
     <div id="tab-logs" class="tab-content hidden">
         {% if logs %}
@@ -312,12 +419,13 @@
             </thead>
             <tbody>
                 {% for log in logs %}
-                {% set action_label = 'Одобрено' if log.action == 'approve' else 'Отхвърлено' if log.action == 'reject' else 'Отнето' if log.action in ['revoke', 'revoke_permit'] else 'Разрешително' if log.action == 'issue_permit' else 'Активирано' if log.action == 'activate' else 'Деактивирано' if log.action == 'deactivate' else 'Роля' if log.action == 'change_role' else 'Изпратен акт' if log.action == 'submit_act' else 'Одобрена глоба' if log.action == 'approve_fine' else 'Отхвърлена глоба' if log.action == 'reject_fine' else log.action %}
+                {% set action_label = 'Одобрено' if log.action == 'approve' else 'Отхвърлено' if log.action == 'reject' else 'Отнето' if log.action in ['revoke', 'revoke_permit'] else 'Издадено' if log.action == 'issue_permit' else 'Редактирано' if log.action == 'edit_permit' else 'Активирано' if log.action == 'activate' else 'Деактивирано' if log.action == 'deactivate' else 'Смяна на роля' if log.action == 'change_role' else 'Отменен акт' if log.action == 'cancel_act' else 'Решен акт' if log.action == 'resolve_act' else 'Одобрена глоба' if log.action == 'approve_fine' else 'Платена глоба' if log.action == 'pay_fine' else 'Отхвърлена глоба' if log.action == 'reject_fine' else 'Одобрено разрешително' if log.action == 'approve_permit' else 'Отхвърлено разрешително' if log.action == 'reject_permit' else log.action %}
+                {% set info_actions = ['issue_permit', 'edit_permit', 'change_role', 'approve_fine', 'pay_fine', 'reject_fine', 'cancel_act', 'approve_permit', 'reject_permit'] %}
                 <tr>
                     <td>{{ log.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
                     <td>{{ log.admin.full_name }}</td>
                     <td>
-                        <span class="badge {% if log.action in ['approve', 'activate'] %}badge-approved{% elif log.action in ['reject', 'revoke', 'revoke_permit', 'deactivate'] %}badge-rejected{% else %}badge-pending{% endif %}">
+                        <span class="badge {% if log.action in ['approve', 'activate'] %}badge-approved{% elif log.action in ['reject', 'revoke', 'revoke_permit', 'deactivate'] %}badge-rejected{% elif log.action in info_actions %}badge-info{% else %}badge-pending{% endif %}">
                             {{ action_label }}
                         </span>
                     </td>

@@ -8,13 +8,12 @@
 {% block content %}
 <div class="inspector-wrap-narrow">
     <div class="page-header-between">
-        <a href="{{ url_for('inspectorBp.list_acts') }}" class="back-link">Назад</a>
+        <a href="{{ url_for('adminBp.index') if user.role == 'admin' else url_for('inspectorBp.list_acts') }}" class="back-link">Назад</a>
         <span class="badge
-            {% if act.status == 'draft' %}badge-pending
-            {% elif act.status == 'submitted' %}badge-approved
-            {% elif act.status == 'confirmed' %}badge-approved
+            {% if act.status == 'confirmed' %}badge-approved
+            {% elif act.status == 'resolved' %}badge-approved
             {% else %}badge-rejected{% endif %}">
-            {% set act_status = 'Чернова' if act.status == 'draft' else 'Изпратен' if act.status == 'submitted' else 'Потвърден' if act.status == 'confirmed' else 'Отменен' %}
+            {% set act_status = 'Активен' if act.status == 'confirmed' else 'Решен' if act.status == 'resolved' else 'Отменен' %}
             {{ act_status }}
         </span>
     </div>
@@ -45,6 +44,17 @@
             <span class="detail-label">Място</span>
             <span class="detail-value">{{ act.location or '—' }}</span>
         </div>
+        {% if act.related_permit %}
+        <div class="detail-row">
+            <span class="detail-label">Свързано разрешително</span>
+            <span class="detail-value">
+                <a href="{{ url_for('permitsBp.permit_detail', permit_id=act.related_permit.id) }}">{{ act.related_permit.permit_number }}</a>
+                <span class="badge badge-{{ 'approved' if act.related_permit.status == 'active' else 'rejected' if act.related_permit.status in ('revoked', 'rejected', 'inactive') else 'pending' }}" style="margin-left:0.5rem">
+                    {{ 'Активно' if act.related_permit.status == 'active' else 'Изтекло' if act.related_permit.status == 'expired' else 'Отнето' if act.related_permit.status == 'revoked' else 'Неактивно' if act.related_permit.status == 'inactive' else 'Отхвърлено' if act.related_permit.status == 'rejected' else 'Чакащо' }}
+                </span>
+            </span>
+        </div>
+        {% endif %}
     </div>
 
     <div class="detail-section">
@@ -109,14 +119,16 @@
     {% endif %}
 
     <div class="form-actions">
-        {% if act.status == 'draft' %}
-        <form method="POST" action="{{ url_for('inspectorBp.submit_act', act_id=act.id) }}" style="display:inline">
-            <button type="submit" class="btn btn-primary"
-                    onclick="return confirm('Изпращане на акт {{ act.act_number }} за обработка?')">
-                Изпрати акта
+        {% if act.status == 'confirmed' %}
+        <form method="POST" action="{{ url_for('inspectorBp.resolve_act', act_id=act.id) }}" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-action btn-approve"
+                    onclick="return confirm('Отбелязване на акт {{ act.act_number }} като решен?')">
+                Отбележи като решен
             </button>
         </form>
         <form method="POST" action="{{ url_for('inspectorBp.cancel_act', act_id=act.id) }}" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn-action btn-reject"
                     onclick="return confirm('Отмяна на акт {{ act.act_number }}?')">
                 Отмени акта

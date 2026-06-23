@@ -14,6 +14,7 @@
 
         <div class="auth-card">
             <form method="POST" action="{{ url_for('auth.login') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group">
                     <label for="email">Имейл адрес</label>
                     <input type="email" id="email" name="email" placeholder="example@mail.bg"  required autocomplete="email">

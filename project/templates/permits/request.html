@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Заяви разрешително{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/permits.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/inspections.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="permits-wrap-form">
+    <div class="page-header">
+        <a href="{{ url_for('permitsBp.list_permits') }}" class="back-link">Назад</a>
+        <h1>Заяви разрешително за риболов</h1>
+    </div>
+
+    <div class="card">
+        <form method="POST" action="{{ url_for('permitsBp.request_permit') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-group">
+                <label for="vessel_id">Кораб</label>
+                <select name="vessel_id" id="vessel_id" required>
+                    <option value="">— Изберете кораб —</option>
+                    {% for vessel in vessels %}
+                    <option value="{{ vessel.id }}">{{ vessel.cfr_number }} / {{ vessel.marking }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="valid_until">Желана валидност до</label>
+                <input type="date" name="valid_until" id="valid_until" value="{{ today }}" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="captain_name">Капитан</label>
+                    <input type="text" name="captain_name" id="captain_name" placeholder="Иван Иванов">
+                </div>
+                <div class="form-group">
+                    <label for="captain_license">Лиценз на капитана</label>
+                    <input type="text" name="captain_license" id="captain_license" placeholder="LIC-00001">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="allowed_gear">Разрешени уреди</label>
+                <input type="text" name="allowed_gear" id="allowed_gear" placeholder="Дънен трал, Парагади">
+            </div>
+
+            <button type="submit" class="btn btn-primary form-full-width">
+                Изпрати заявка →
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
