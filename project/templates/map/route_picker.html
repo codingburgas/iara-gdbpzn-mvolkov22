@@ -1,0 +1,180 @@
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}">
+
+<div class="map-field">
+  <div class="map-field-row">
+    <span class="dot dot-green"></span>
+    <input type="text" id="{{ map_id }}_start_input" placeholder="Начало — не е избрано" readonly>
+    <input type="hidden" name="start_location" id="{{ map_id }}_start_coord" value="{{ start_val or '' }}">
+  </div>
+  <div class="map-field-row">
+    <span class="dot dot-red"></span>
+    <input type="text" id="{{ map_id }}_end_input" placeholder="Край — не е избран" readonly>
+    <input type="hidden" name="end_location" id="{{ map_id }}_end_coord" value="{{ end_val or '' }}">
+  </div>
+  <div class="map-actions">
+    <button type="button" class="btn-map" onclick="openRoutePicker('{{ map_id }}')">Избери на карта</button>
+    <button type="button" class="btn-map-sm" onclick="clearRoutePicker('{{ map_id }}')">X</button>
+  </div>
+</div>
+
+<div id="{{ map_id }}_modal" class="map-modal-overlay">
+  <div class="map-modal-box">
+    <div class="map-modal-head">
+      <h3>Маршрут — отбележете начало и край</h3>
+      <button type="button" class="close-btn" onclick="closeRoutePicker('{{ map_id }}')">&times;</button>
+    </div>
+    <div class="map-modal-search">
+      <input type="text" id="{{ map_id }}_search" placeholder="Търсене на място или координати..."
+             onkeydown="if(event.key==='Enter'){event.preventDefault();searchRoutePicker('{{ map_id }}')}">
+      <button type="button" onclick="searchRoutePicker('{{ map_id }}')">Търси</button>
+      <span class="status" id="{{ map_id }}_status">Кликнете за старт, после за край</span>
+    </div>
+    <div id="{{ map_id }}_map" class="map-container"></div>
+    <div class="map-modal-foot">
+      <span class="dist-info" id="{{ map_id }}_dist"></span>
+      <button type="button" class="btn-cancel" onclick="closeRoutePicker('{{ map_id }}')">Отказ</button>
+      <button type="button" onclick="confirmRoutePicker('{{ map_id }}')" id="{{ map_id }}_confirm" class="btn-confirm" disabled>Потвърди</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+if (!window._routePickers) window._routePickers = {};
+
+function openRoutePicker(mid) {
+  document.getElementById(mid + '_modal').style.display = 'flex';
+  setTimeout(function() {
+    if (window._routePickers[mid]) {
+      try { window._routePickers[mid].remove(); } catch(e) {}
+      delete window._routePickers[mid];
+    }
+    var startCoord = document.getElementById(mid + '_start_coord').value;
+    var endCoord = document.getElementById(mid + '_end_coord').value;
+    function parse(s) {
+      var m = s && s.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+      return m ? {lat: parseFloat(m[1]), lng: parseFloat(m[2])} : null;
+    }
+    var startPt = parse(startCoord), endPt = parse(endCoord);
+    var startMarker = null, endMarker = null, line = null;
+    var initLat = 42.65, initLng = 28.1, zoom = 9;
+    if (startPt && endPt) { initLat = (startPt.lat + endPt.lat) / 2; initLng = (startPt.lng + endPt.lng) / 2; zoom = 10; }
+    else if (startPt) { initLat = startPt.lat; initLng = startPt.lng; zoom = 12; }
+    else if (endPt) { initLat = endPt.lat; initLng = endPt.lng; zoom = 12; }
+    var map = L.map(document.getElementById(mid + '_map'), {
+      maxBounds: [[41.5, 27.2], [43.8, 29.0]], minZoom: 8
+    }).setView([initLat, initLng], zoom);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 16, attribution: 'OpenStreetMap'
+    }).addTo(map);
+
+    function updateLine() {
+      if (line) map.removeLayer(line);
+      if (startMarker && endMarker) {
+        var pts = [startMarker.getLatLng(), endMarker.getLatLng()];
+        line = L.polyline(pts, {color: '#2563eb', weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
+        var dist = map.distance(pts[0], pts[1]);
+        document.getElementById(mid + '_dist').textContent = 'Разстояние: ' + (dist > 1000 ? (dist / 1000).toFixed(1) + ' km' : dist.toFixed(0) + ' m');
+      }
+    }
+    function enableConfirm() {
+      var btn = document.getElementById(mid + '_confirm');
+      btn.disabled = false;
+      btn.className = 'btn-confirm active';
+    }
+    function makeDraggable(marker, isStart) {
+      marker.on('dragend', function() {
+        var ll = marker.getLatLng();
+        var val = ll.lat.toFixed(5) + ',' + ll.lng.toFixed(5);
+        document.getElementById(mid + (isStart ? '_start_coord' : '_end_coord')).value = val;
+        document.getElementById(mid + (isStart ? '_start_input' : '_end_input')).value = val;
+        updateLine();
+      });
+    }
+    var divIcon = function(bg) {
+      return L.divIcon({className:'',html:'<div style="background:'+bg+';width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4)"></div>',iconSize:[16,16],iconAnchor:[8,8]});
+    };
+    function dropStart(ll) {
+      if (startMarker) map.removeLayer(startMarker);
+      startMarker = L.marker(ll, {draggable: true, icon: divIcon('#16a34a')}).addTo(map).bindPopup('Старт');
+      makeDraggable(startMarker, true);
+      var val = ll.lat.toFixed(5) + ',' + ll.lng.toFixed(5);
+      document.getElementById(mid + '_start_coord').value = val;
+      document.getElementById(mid + '_start_input').value = val;
+      document.getElementById(mid + '_status').textContent = 'Старт избран. Кликнете за край.';
+      if (endMarker) { updateLine(); enableConfirm(); }
+    }
+    function dropEnd(ll) {
+      if (endMarker) map.removeLayer(endMarker);
+      endMarker = L.marker(ll, {draggable: true, icon: divIcon('#dc2626')}).addTo(map).bindPopup('Край');
+      makeDraggable(endMarker, false);
+      var val = ll.lat.toFixed(5) + ',' + ll.lng.toFixed(5);
+      document.getElementById(mid + '_end_coord').value = val;
+      document.getElementById(mid + '_end_input').value = val;
+      if (startMarker) { updateLine(); enableConfirm(); }
+      document.getElementById(mid + '_status').textContent = 'Маршрутът е готов. Натиснете Потвърди.';
+    }
+    var clickPhase = 0;
+    if (startPt) { dropStart(startPt); clickPhase = 1; }
+    if (endPt) { dropEnd(endPt); clickPhase = 2; }
+    map.on('click', function(e) {
+      if (clickPhase === 0) { dropStart(e.latlng); clickPhase = 1; }
+      else if (clickPhase === 1) { dropEnd(e.latlng); clickPhase = 2; }
+      else {
+        if (startMarker) map.removeLayer(startMarker);
+        if (endMarker) map.removeLayer(endMarker);
+        if (line) map.removeLayer(line);
+        startMarker = null; endMarker = null; line = null;
+        document.getElementById(mid + '_start_coord').value = '';
+        document.getElementById(mid + '_start_input').value = '';
+        document.getElementById(mid + '_end_coord').value = '';
+        document.getElementById(mid + '_end_input').value = '';
+        document.getElementById(mid + '_dist').textContent = '';
+        dropStart(e.latlng);
+        clickPhase = 1;
+        var btn = document.getElementById(mid + '_confirm');
+        btn.disabled = true;
+        btn.className = 'btn-confirm';
+      }
+    });
+    window._routePickers[mid] = map;
+    setTimeout(function() { map.invalidateSize(); }, 100);
+  }, 100);
+}
+function closeRoutePicker(mid) {
+  document.getElementById(mid + '_modal').style.display = 'none';
+}
+function clearRoutePicker(mid) {
+  document.getElementById(mid + '_start_input').value = '';
+  document.getElementById(mid + '_start_coord').value = '';
+  document.getElementById(mid + '_end_input').value = '';
+  document.getElementById(mid + '_end_coord').value = '';
+}
+function searchRoutePicker(mid) {
+  var query = document.getElementById(mid + '_search').value.trim();
+  if (!query) return;
+  var map = window._routePickers[mid];
+  if (!map) return;
+  var m = query.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+  if (m) {
+    map.setView([parseFloat(m[1]), parseFloat(m[2])], 14);
+    map.fire('click', {latlng: {lat: parseFloat(m[1]), lng: parseFloat(m[2])}});
+    return;
+  }
+  fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=1')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data && data.length > 0) {
+        map.setView([parseFloat(data[0].lat), parseFloat(data[0].lon)], 14);
+        map.fire('click', {latlng: {lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon)}});
+      } else { alert('Мястото не е намерено.'); }
+    });
+}
+function confirmRoutePicker(mid) {
+  if (!document.getElementById(mid + '_start_coord').value || !document.getElementById(mid + '_end_coord').value) {
+    alert('Моля, отбележете начална и крайна точка.'); return;
+  }
+  closeRoutePicker(mid);
+}
+</script>

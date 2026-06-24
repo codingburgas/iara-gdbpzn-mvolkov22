@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Редактиране на дневник №{{ entry.id }}{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/logbook.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="logbook-wrap">
+    <a href="{{ url_for('logbookBp.entry_detail', entry_id=entry.id) }}" class="back-link">Назад</a>
+    <h1>Редактиране на запис №{{ entry.id }}</h1>
+
+    <form method="POST" id="logbook-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Начало на риболов</label>
+                <input type="datetime-local" name="start_datetime" value="{{ entry.start_datetime.strftime('%Y-%m-%dT%H:%M') }}" required>
+            </div>
+            <div class="form-group">
+                <label>Край на риболов</label>
+                <input type="datetime-local" name="end_datetime" value="{{ entry.end_datetime.strftime('%Y-%m-%dT%H:%M') if entry.end_datetime else '' }}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Маршрут (начало → край)</label>
+            {% with map_id='route_picker', start_val=entry.start_location or '', end_val=entry.end_location or '' %}
+                {% include 'map/route_picker.html' %}
+            {% endwith %}
+        </div>
+
+        <div class="form-group">
+            <label>Използвани уреди</label>
+            <textarea name="gear_used" rows="2">{{ entry.gear_used or '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Бележки</label>
+            <textarea name="notes" rows="3">{{ entry.notes or '' }}</textarea>
+        </div>
+
+        <h2>Улов</h2>
+        <div id="catches-container">
+            {% for catch in entry.catches %}
+            <div class="catch-row">
+                <input type="text" name="species[]" value="{{ catch.species }}" required>
+                <input type="number" name="quantity_kg[]" value="{{ catch.quantity_kg }}" step="0.01" min="0" required>
+                <input type="number" name="quantity_pcs[]" value="{{ catch.quantity_pcs or '' }}" min="0">
+                <button type="button" class="btn-remove-catch" onclick="this.parentElement.remove()">×</button>
+            </div>
+            {% else %}
+            <div class="catch-row">
+                <input type="text" name="species[]" placeholder="Вид риба" required>
+                <input type="number" name="quantity_kg[]" placeholder="Кг" step="0.01" min="0" required>
+                <input type="number" name="quantity_pcs[]" placeholder="Брой" min="0">
+                <button type="button" class="btn-remove-catch" onclick="this.parentElement.remove()" style="display:none">×</button>
+            </div>
+            {% endfor %}
+        </div>
+        <button type="button" class="btn-action" onclick="addCatchRow()">+ Добави вид</button>
+
+        <div class="form-actions">
+            <a href="{{ url_for('logbookBp.entry_detail', entry_id=entry.id) }}" class="btn btn-back">Отказ</a>
+            <button type="submit" name="submit" value="0" class="btn">Запази чернова</button>
+            <button type="submit" name="submit" value="1" class="btn btn-approve">Подай дневник</button>
+        </div>
+    </form>
+</div>
+
+<script>
+function addCatchRow() {
+    const container = document.getElementById('catches-container');
+    const row = document.createElement('div');
+    row.className = 'catch-row';
+    row.innerHTML = `
+        <input type="text" name="species[]" placeholder="Вид риба" required>
+        <input type="number" name="quantity_kg[]" placeholder="Кг" step="0.01" min="0" required>
+        <input type="number" name="quantity_pcs[]" placeholder="Брой" min="0">
+        <button type="button" class="btn-remove-catch" onclick="this.parentElement.remove()">×</button>
+    `;
+    container.appendChild(row);
+}
+</script>
+{% endblock %}

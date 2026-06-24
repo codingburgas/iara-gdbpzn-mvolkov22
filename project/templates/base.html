@@ -25,12 +25,14 @@
         {% if user %}
             {% if user.role == 'user' %}
                 <a href="/vessels">Мои кораби</a>
+                <a href="/logbook">Дневник</a>
             {% endif %}
             {% if user.role in ['user', 'inspector', 'admin'] %}
                 <a href="{{ url_for('permitsBp.list_permits') }}">Разрешителни</a>
             {% endif %}
             {% if user.role == 'inspector' %}
                 <a href="{{ url_for('inspectorBp.dashboard') }}">Инспекции</a>
+                <a href="/logbook">Дневници</a>
             {% endif %}
             {% if user.role == 'admin' %}
                 <a href="/admin">Админ панел</a>

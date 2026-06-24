@@ -93,9 +93,10 @@ def create_act():
         flash(f'Акт {act.act_number} е създаден успешно.', 'success')
         return redirect(url_for('inspectorBp.act_detail', act_id=act.id))
 
+    preselected_vessel_id = request.args.get('vessel_id', type=int)
     vessels = VesselModel.query.filter_by(status='approved').order_by(VesselModel.cfr_number).all()
     today = date.today().isoformat()
-    return render_template('inspector/act_create.html', user=g.user, vessels=vessels, today=today)
+    return render_template('inspector/act_create.html', user=g.user, vessels=vessels, today=today, preselected_vessel_id=preselected_vessel_id)
 
 
 @inspectorApp.route('/acts/<int:act_id>')

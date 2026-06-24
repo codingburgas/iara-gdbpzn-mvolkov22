@@ -125,3 +125,37 @@ class Fine(db.Model):
     inspector = db.relationship('UserModel', foreign_keys=[inspector_id], back_populates='issued_fines')
     vessel = db.relationship('VesselModel', foreign_keys=[vessel_id], back_populates='fines')
     admin = db.relationship('UserModel', foreign_keys=[admin_id], back_populates='decided_fines')
+
+
+class FishingLogEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    vessel_id = db.Column(db.Integer, db.ForeignKey('vessel_model.id'), nullable=False)
+    permit_id = db.Column(db.Integer, db.ForeignKey('permit_model.id'), nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('user_model.id'), nullable=False)
+
+    start_datetime = db.Column(db.DateTime, nullable=False)
+    end_datetime = db.Column(db.DateTime, nullable=True)
+    start_location = db.Column(db.String(300))
+    end_location = db.Column(db.String(300))
+    gear_used = db.Column(db.Text)
+    notes = db.Column(db.Text)
+
+    status = db.Column(db.Enum('draft', 'submitted', 'confirmed'), default='draft', nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+
+    vessel = db.relationship('VesselModel', backref='log_entries', lazy=True)
+    permit = db.relationship('PermitModel', backref='log_entries', lazy=True)
+    creator = db.relationship('UserModel', foreign_keys=[created_by])
+    catches = db.relationship('CatchEntry', back_populates='log_entry', lazy=True, cascade='all, delete-orphan')
+
+
+class CatchEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    log_entry_id = db.Column(db.Integer, db.ForeignKey('fishing_log_entry.id'), nullable=False)
+    species = db.Column(db.String(100), nullable=False)
+    quantity_kg = db.Column(db.Float, nullable=False)
+    quantity_pcs = db.Column(db.Integer)
+    notes = db.Column(db.Text)
+
+    log_entry = db.relationship('FishingLogEntry', back_populates='catches')

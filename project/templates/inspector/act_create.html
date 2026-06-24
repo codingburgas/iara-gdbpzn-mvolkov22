@@ -22,7 +22,7 @@
                     <select name="vessel_id" id="vessel_id" required>
                         <option value="">— Изберете кораб —</option>
                         {% for vessel in vessels %}
-                        <option value="{{ vessel.id }}">{{ vessel.cfr_number }} / {{ vessel.marking }} — {{ vessel.owner.full_name }}</option>
+                        <option value="{{ vessel.id }}" {{ 'selected' if preselected_vessel_id == vessel.id }}>{{ vessel.cfr_number }} / {{ vessel.marking }} — {{ vessel.owner.full_name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -42,7 +42,9 @@
                 </div>
                 <div class="form-group">
                     <label for="location">Място</label>
-                    <input type="text" name="location" id="location" placeholder="Пристанище / координати">
+                    {% with field_name='location', field_id='act_loc', field_value='' %}
+                        {% include 'map/point_picker.html' %}
+                    {% endwith %}
                 </div>
             </div>
 
@@ -83,7 +85,13 @@
 
 <script>
 document.getElementById('vessel_id').addEventListener('change', function() {
-    const vesselId = this.value;
+    loadPermits(this.value);
+});
+document.addEventListener('DOMContentLoaded', function() {
+    var sel = document.getElementById('vessel_id');
+    if (sel.value) loadPermits(sel.value);
+});
+function loadPermits(vesselId) {
     const permitSelect = document.getElementById('related_permit_id');
     permitSelect.innerHTML = '<option value="">— Без разрешително —</option>';
     if (vesselId) {
@@ -98,6 +106,6 @@ document.getElementById('vessel_id').addEventListener('change', function() {
                 });
             });
     }
-});
+}
 </script>
 {% endblock %}

@@ -1,0 +1,114 @@
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}">
+
+<div class="map-field">
+  <div class="map-field-row">
+    <input type="text" id="{{ field_id }}_input" placeholder="Координати или име на място" value="{{ field_value or '' }}" readonly>
+    <input type="hidden" name="{{ field_name }}" id="{{ field_id }}_coord" value="{{ field_value or '' }}">
+    <button type="button" class="btn-map-icon" onclick="openMapPicker('{{ field_id }}')">&#x1F5FA;</button>
+    <button type="button" class="btn-map-sm" onclick="clearPointPicker('{{ field_id }}')">X</button>
+  </div>
+</div>
+
+<div id="{{ field_id }}_modal" class="map-modal-overlay">
+  <div class="map-modal-box">
+    <div class="map-modal-head">
+      <h3>Изберете локация</h3>
+      <button type="button" class="close-btn" onclick="closeMapPicker('{{ field_id }}')">&times;</button>
+    </div>
+    <div class="map-modal-search">
+      <input type="text" id="{{ field_id }}_search" placeholder="Търсене на място или координати (lat,lng)..."
+             onkeydown="if(event.key==='Enter'){event.preventDefault();searchMapPicker('{{ field_id }}')}">
+      <button type="button" onclick="searchMapPicker('{{ field_id }}')">Търси</button>
+      <span class="status" id="{{ field_id }}_status"></span>
+    </div>
+    <div id="{{ field_id }}_map" class="map-container"></div>
+    <div class="map-modal-foot">
+      <button type="button" class="btn-cancel" onclick="closeMapPicker('{{ field_id }}')">Отказ</button>
+      <button type="button" onclick="confirmMapPicker('{{ field_id }}')" id="{{ field_id }}_confirm" class="btn-confirm" disabled>Потвърди</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+if (!window._mapPickers) window._mapPickers = {};
+
+function openMapPicker(fid) {
+  document.getElementById(fid + '_modal').style.display = 'flex';
+  setTimeout(function() {
+    if (window._mapPickers[fid]) {
+      try { window._mapPickers[fid].remove(); } catch(e) {}
+      delete window._mapPickers[fid];
+    }
+    var coordVal = document.getElementById(fid + '_coord').value;
+    var hasCoord = coordVal && coordVal.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+    var lat = 42.65, lng = 28.1, zoom = 9;
+    if (hasCoord) {
+      var m = coordVal.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+      lat = parseFloat(m[1]); lng = parseFloat(m[2]); zoom = 14;
+    }
+    var marker = null;
+    var map = L.map(document.getElementById(fid + '_map'), {
+      maxBounds: [[41.5, 27.2], [43.8, 29.0]], minZoom: 8
+    }).setView([lat, lng], zoom);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 16, attribution: 'OpenStreetMap'
+    }).addTo(map);
+
+    function placeMarker(ll) {
+      if (marker) map.removeLayer(marker);
+      marker = L.marker(ll).addTo(map);
+      var val = ll.lat.toFixed(5) + ',' + ll.lng.toFixed(5);
+      document.getElementById(fid + '_coord').value = val;
+      document.getElementById(fid + '_status').textContent = val;
+      var btn = document.getElementById(fid + '_confirm');
+      btn.disabled = false;
+      btn.className = 'btn-confirm active';
+    }
+    if (hasCoord) {
+      var m = coordVal.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+      placeMarker({lat: parseFloat(m[1]), lng: parseFloat(m[2])});
+    }
+    map.on('click', function(e) { placeMarker(e.latlng); });
+    window._mapPickers[fid] = map;
+    setTimeout(function() { map.invalidateSize(); }, 100);
+  }, 100);
+}
+
+function closeMapPicker(fid) {
+  document.getElementById(fid + '_modal').style.display = 'none';
+}
+
+function searchMapPicker(fid) {
+  var query = document.getElementById(fid + '_search').value.trim();
+  if (!query) return;
+  var map = window._mapPickers[fid];
+  if (!map) return;
+  var m = query.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+  if (m) {
+    map.setView([parseFloat(m[1]), parseFloat(m[2])], 14);
+    map.fire('click', {latlng: {lat: parseFloat(m[1]), lng: parseFloat(m[2])}});
+    return;
+  }
+  fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(query) + '&limit=1')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data && data.length > 0) {
+        map.setView([parseFloat(data[0].lat), parseFloat(data[0].lon)], 14);
+        map.fire('click', {latlng: {lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon)}});
+      } else { alert('Мястото не е намерено.'); }
+    });
+}
+
+function clearPointPicker(fid) {
+  document.getElementById(fid + '_input').value = '';
+  document.getElementById(fid + '_coord').value = '';
+}
+
+function confirmMapPicker(fid) {
+  if (!document.getElementById(fid + '_coord').value) { alert('Моля, изберете локация.'); return; }
+  document.getElementById(fid + '_input').value = document.getElementById(fid + '_coord').value;
+  closeMapPicker(fid);
+}
+</script>

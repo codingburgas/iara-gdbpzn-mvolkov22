@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Дневник №{{ entry.id }}{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/logbook.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="logbook-wrap">
+    <a href="{{ url_for('logbookBp.list_entries') }}" class="back-link">Назад</a>
+
+    <div class="detail-header">
+        <h1>Риболовен запис №{{ entry.id }}</h1>
+        {% set status_label = 'Чернова' if entry.status == 'draft' else 'Изпратен' if entry.status == 'submitted' else 'Потвърден' %}
+        {% set status_class = 'pending' if entry.status == 'draft' else 'approved' if entry.status == 'submitted' else 'paid' %}
+        <span class="badge badge-{{ status_class }}">{{ status_label }}</span>
+    </div>
+
+    <div class="detail-grid">
+        <div class="detail-card">
+            <h3>Кораб</h3>
+            <p><strong>{{ entry.vessel.cfr_number }}</strong> / {{ entry.vessel.marking }}</p>
+            <p>Дължина: {{ entry.vessel.length }} м</p>
+        </div>
+
+        <div class="detail-card">
+            <h3>Разрешително</h3>
+            {% if entry.permit %}
+            <p><strong>{{ entry.permit.permit_number }}</strong></p>
+            <p>Важи до: {{ entry.permit.valid_until.strftime('%d.%m.%Y') }}</p>
+            {% else %}
+            <p>—</p>
+            {% endif %}
+        </div>
+
+        <div class="detail-card">
+            <h3>Време</h3>
+            <p><strong>Начало:</strong> {{ entry.start_datetime.strftime('%d.%m.%Y %H:%M') }}</p>
+            <p><strong>Край:</strong> {{ entry.end_datetime.strftime('%d.%m.%Y %H:%M') if entry.end_datetime else '—' }}</p>
+        </div>
+
+        <div class="detail-card">
+            <h3>Локация</h3>
+            <p><strong>От:</strong> {{ entry.start_location or '—' }}</p>
+            <p><strong>До:</strong> {{ entry.end_location or '—' }}</p>
+            {% if user.role in ('admin', 'inspector') and entry.start_location and entry.end_location %}
+                {% with map_id='route_' + entry.id|string, start_raw=entry.start_location, end_raw=entry.end_location, start_label=entry.start_location, end_label=entry.end_location, title='Маршрут' %}
+                    {% include 'map/route_view.html' %}
+                {% endwith %}
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="detail-section">
+        <h2>Използвани уреди</h2>
+        <p>{{ entry.gear_used or '—' }}</p>
+    </div>
+
+    <div class="detail-section">
+        <h2>Улов</h2>
+        {% if entry.catches %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Вид риба</th>
+                    <th>Количество (кг)</th>
+                    <th>Брой</th>
+                    <th>Бележки</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set total_kg = 0 %}
+                {% for catch in entry.catches %}
+                <tr>
+                    <td><strong>{{ catch.species }}</strong></td>
+                    <td>{{ '%.2f'|format(catch.quantity_kg) }} кг</td>
+                    <td>{{ catch.quantity_pcs or '—' }}</td>
+                    <td>{{ catch.notes or '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th>Общо:</th>
+                    <th>{{ '%.2f'|format(entry.catches | sum(attribute='quantity_kg')) }} кг</th>
+                    <th colspan="2"></th>
+                </tr>
+            </tfoot>
+        </table>
+        {% else %}
+        <p>Няма записан улов.</p>
+        {% endif %}
+    </div>
+
+    {% if entry.notes %}
+    <div class="detail-section">
+        <h2>Бележки</h2>
+        <p>{{ entry.notes }}</p>
+    </div>
+    {% endif %}
+
+    <div class="detail-meta">
+        <span>Създаден от: {{ entry.creator.full_name }}</span>
+        <span>на {{ entry.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+    </div>
+
+    <div class="form-actions">
+        {% if entry.status == 'draft' and entry.created_by == user.id %}
+        <a href="{{ url_for('logbookBp.edit_entry', entry_id=entry.id) }}" class="btn btn-approve">Редактирай</a>
+        {% endif %}
+        {% if user.role in ('inspector', 'admin') %}
+        <a href="{{ url_for('inspectorBp.create_act', vessel_id=entry.vessel_id) }}" class="btn btn-approve" style="background:#dc2626;border-color:#dc2626">Създай акт за проверка</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

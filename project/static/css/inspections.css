@@ -44,10 +44,21 @@
     line-height: 1;
 }
 
-.stat-number.pending  { color: #b45309; }
-.stat-number.approved { color: #059669; }
-.stat-number.rejected { color: #dc2626; }
-.stat-number.users { color: #0284c7; }
+.stat-number.pending {
+  color: #b45309;
+}
+
+.stat-number.approved {
+  color: #059669;
+}
+
+.stat-number.rejected {
+  color: #dc2626;
+}
+
+.stat-number.users {
+  color: #0284c7;
+}
 
 .stat-label {
     font-size: .75rem;
@@ -230,14 +241,19 @@
     border-color: rgba(16,185,129,.4);
     color: #059669;
 }
-.btn-approve:hover { background: rgba(16,185,129,.25); }
+.btn-approve:hover {
+  background: rgba(16,185,129,.25);
+}
 
 .btn-reject {
-    background: rgba(239,68,68,.1);
-    border-color: rgba(239,68,68,.3);
-    color: #dc2626;
+  background: rgba(239,68,68,.1);
+  border-color: rgba(239,68,68,.3);
+  color: #dc2626;
 }
-.btn-reject:hover { background: rgba(239,68,68,.2); }
+
+.btn-reject:hover {
+  background: rgba(239,68,68,.2);
+}
 
 .filter-bar {
     display: flex;
@@ -388,4 +404,8 @@
     background: #f9fafb !important;
     color: #6b7280 !important;
     cursor: not-allowed;
+}
+
+.map-open-btn {
+  line-height: 1;
 }

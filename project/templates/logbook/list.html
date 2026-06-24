@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Електронен дневник{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/logbook.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="logbook-wrap">
+    <div class="logbook-header">
+        <h1>Електронен дневник</h1>
+        {% if user.role == 'user' %}
+        <a href="{{ url_for('logbookBp.create_entry') }}" class="btn-action btn-approve">Нов запис</a>
+        {% endif %}
+    </div>
+
+    <form method="GET" class="filter-bar">
+        <select name="status" onchange="this.form.submit()">
+            <option value="">Всички статуси</option>
+            <option value="draft" {{ 'selected' if current_filter == 'draft' }}>Чернова</option>
+            <option value="submitted" {{ 'selected' if current_filter == 'submitted' }}>Изпратен</option>
+            <option value="confirmed" {{ 'selected' if current_filter == 'confirmed' }}>Потвърден</option>
+        </select>
+        <input type="text" name="search" placeholder="Търсене по кораб..." value="{{ search }}">
+        <button type="submit">Търси</button>
+    </form>
+
+    {% if entries %}
+    <table>
+        <thead>
+            <tr>
+                <th>№</th>
+                <th>Кораб</th>
+                <th>Начало</th>
+                <th>Край</th>
+                <th>Улов (кг)</th>
+                <th>Статус</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            {% set total_kg = entry.catches | sum(attribute='quantity_kg') %}
+            {% set status_label = 'Чернова' if entry.status == 'draft' else 'Изпратен' if entry.status == 'submitted' else 'Потвърден' %}
+            {% set status_class = 'pending' if entry.status == 'draft' else 'approved' if entry.status == 'submitted' else 'paid' %}
+            <tr>
+                <td>{{ entry.id }}</td>
+                <td><strong>{{ entry.vessel.cfr_number }}</strong> / {{ entry.vessel.marking }}</td>
+                <td>{{ entry.start_datetime.strftime('%d.%m.%Y %H:%M') }}</td>
+                <td>{{ entry.end_datetime.strftime('%d.%m.%Y %H:%M') if entry.end_datetime else '—' }}</td>
+                <td>{{ '%.2f'|format(total_kg) }} кг</td>
+                <td><span class="badge badge-{{ status_class }}">{{ status_label }}</span></td>
+                <td><a href="{{ url_for('logbookBp.entry_detail', entry_id=entry.id) }}" class="btn-link">Преглед</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <p>Няма записи в дневника.</p>
+        {% if user.role == 'user' %}
+        <a href="{{ url_for('logbookBp.create_entry') }}" class="btn-action btn-approve">Създайте първия запис</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

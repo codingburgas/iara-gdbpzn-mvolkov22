@@ -1,0 +1,60 @@
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}">
+
+<a href="#" class="map-view-link" onclick="event.preventDefault();openMapView('{{ map_id }}')">
+  Покажи на карта
+</a>
+
+<div id="{{ map_id }}_modal" class="map-modal-overlay">
+  <div class="map-modal-box">
+    <div class="map-modal-head">
+      <h3>{{ title or 'Локация' }}</h3>
+      <button type="button" class="close-btn" onclick="document.getElementById('{{ map_id }}_modal').style.display='none'">&times;</button>
+    </div>
+    <div id="{{ map_id }}_map" class="map-container" style="height:420px"></div>
+    <div class="map-modal-foot">
+      <span class="coord-label">{{ raw_value }}</span>
+      <button type="button" class="btn-close-view" onclick="document.getElementById('{{ map_id }}_modal').style.display='none'">Затвори</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+if (!window.mapViewInstances) window.mapViewInstances = {};
+
+function openMapView(mapId) {
+  document.getElementById(mapId + '_modal').style.display = 'flex';
+  setTimeout(function() {
+    if (window.mapViewInstances[mapId]) {
+      window.mapViewInstances[mapId].map.invalidateSize();
+      return;
+    }
+    var raw = '{{ raw_value|e }}';
+    var lat = null, lng = null, label = raw;
+    var m = raw.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+    if (m) { lat = parseFloat(m[1]); lng = parseFloat(m[2]); }
+    var mapEl = document.getElementById(mapId + '_map');
+    var map = L.map(mapEl, {
+      maxBounds: [[41.5, 27.2], [43.8, 29.0]], minZoom: 8
+    }).setView([lat || 42.65, lng || 28.1], lat ? 14 : 9);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 16, attribution: 'OpenStreetMap'
+    }).addTo(map);
+    function place(llat, llng, txt) {
+      L.marker([llat, llng]).addTo(map).bindPopup(txt).openPopup();
+      map.setView([llat, llng], 14);
+    }
+    if (lat !== null) { place(lat, lng, label); }
+    else if (label && label !== '-') {
+      fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(label) + '&limit=1')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d && d.length > 0) place(parseFloat(d[0].lat), parseFloat(d[0].lon), d[0].display_name);
+        });
+    }
+    window.mapViewInstances[mapId] = { map: map };
+    setTimeout(function() { map.invalidateSize(); }, 100);
+  }, 100);
+}
+</script>

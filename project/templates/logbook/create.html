@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Нов запис в дневник{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/logbook.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="logbook-wrap">
+    <a href="{{ url_for('logbookBp.list_entries') }}" class="back-link">Назад</a>
+    <h1>Нов запис в електронен дневник</h1>
+
+    <form method="POST" id="logbook-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+            <label>Кораб</label>
+            <select name="vessel_id" id="vessel-select" required>
+                <option value="">— Изберете кораб —</option>
+                {% for v in vessels %}
+                <option value="{{ v.id }}" data-length="{{ v.length }}">{{ v.cfr_number }} / {{ v.marking }} ({{ v.length }}м)</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Разрешително (активно)</label>
+            <select name="permit_id" id="permit-select">
+                <option value="">— Без разрешително —</option>
+            </select>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Начало на риболов</label>
+                <input type="datetime-local" name="start_datetime" required>
+            </div>
+            <div class="form-group">
+                <label>Край на риболов</label>
+                <input type="datetime-local" name="end_datetime">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Маршрут (начало → край)</label>
+            {% with map_id='route_picker', start_val='', end_val='' %}
+                {% include 'map/route_picker.html' %}
+            {% endwith %}
+        </div>
+
+        <div class="form-group">
+            <label>Използвани уреди</label>
+            <textarea name="gear_used" rows="2" placeholder="Описание на уредите за риболов"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Бележки</label>
+            <textarea name="notes" rows="3"></textarea>
+        </div>
+
+        <h2>Улов</h2>
+        <div id="catches-container">
+            <div class="catch-row">
+                <input type="text" name="species[]" placeholder="Вид риба" required>
+                <input type="number" name="quantity_kg[]" placeholder="Кг" step="0.01" min="0" required>
+                <input type="number" name="quantity_pcs[]" placeholder="Брой" min="0">
+                <button type="button" class="btn-remove-catch" onclick="this.parentElement.remove()" style="display:none">×</button>
+            </div>
+        </div>
+        <button type="button" class="btn-action" onclick="addCatchRow()">+ Добави вид</button>
+
+        <div class="form-actions">
+            <a href="{{ url_for('logbookBp.list_entries') }}" class="btn btn-back">Отказ</a>
+            <button type="submit" class="btn btn-approve">Подай дневник</button>
+        </div>
+    </form>
+</div>
+
+<script>
+const vesselSelect = document.getElementById('vessel-select');
+const permitSelect = document.getElementById('permit-select');
+
+vesselSelect.addEventListener('change', function() {
+    const vesselId = this.value;
+    permitSelect.innerHTML = '<option value="">— Без разрешително —</option>';
+    if (vesselId) {
+        fetch('/logbook/vessels/' + vesselId + '/permits')
+            .then(r => r.json())
+            .then(permits => {
+                permits.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.permit_number + ' (важи до ' + p.valid_until + ')';
+                    permitSelect.appendChild(opt);
+                });
+            });
+    }
+});
+
+function addCatchRow() {
+    const container = document.getElementById('catches-container');
+    const row = document.createElement('div');
+    row.className = 'catch-row';
+    row.innerHTML = `
+        <input type="text" name="species[]" placeholder="Вид риба" required>
+        <input type="number" name="quantity_kg[]" placeholder="Кг" step="0.01" min="0" required>
+        <input type="number" name="quantity_pcs[]" placeholder="Брой" min="0">
+        <button type="button" class="btn-remove-catch" onclick="this.parentElement.remove()">×</button>
+    `;
+    container.appendChild(row);
+}
+</script>
+{% endblock %}

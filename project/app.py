@@ -9,6 +9,7 @@ from routes.admin import adminApp as adminBp
 from routes.vessels import vesselsApp as vesselsBp
 from routes.permits import permitsApp as permitsApp
 from routes.inspector import inspectorApp as inspectorBp
+from routes.logbook import logbookApp as logbookBp
 from database import config
 from dotenv import load_dotenv
 
@@ -31,6 +32,7 @@ app.register_blueprint(adminBp, url_prefix='/admin')
 app.register_blueprint(vesselsBp, url_prefix='/vessels')
 app.register_blueprint(permitsApp, url_prefix='/permits')
 app.register_blueprint(inspectorBp, url_prefix='/inspector')
+app.register_blueprint(logbookBp, url_prefix='/logbook')
 
 
 def expire_permits_job():
@@ -57,7 +59,7 @@ scheduler.start()
 def before_request():
     g.user = User.query.get(session.get('user_id'))
 
-    if request.path.startswith('/vessels') or request.path.startswith('/admin') or request.path.startswith('/permits') or request.path.startswith('/inspector') or request.path.startswith('/profile') or request.path.startswith('/pay'):
+    if request.path.startswith('/vessels') or request.path.startswith('/admin') or request.path.startswith('/permits') or request.path.startswith('/inspector') or request.path.startswith('/profile') or request.path.startswith('/pay') or request.path.startswith('/logbook'):
         if not session.get('user_id'):
             flash('Моля, влезте първо!')
             return redirect(url_for('auth.login'))
@@ -69,7 +71,7 @@ def before_request():
 
 @app.route('/profile')
 def profile():
-    from models.models import Fine, VesselModel, InspectionAct, PermitModel
+    from models.models import Fine, VesselModel, InspectionAct, PermitModel, FishingLogEntry
     user = g.user
     if not user:
         flash('Моля, влезте първо!')
@@ -81,17 +83,19 @@ def profile():
     fines = []
     acts = []
     permits = []
+    log_entries = []
 
     if user.role == 'user':
         vessels = VesselModel.query.filter_by(owner_id=user.id).all()
         vessel_ids = [v.id for v in vessels]
         fines = Fine.query.filter(Fine.vessel_id.in_(vessel_ids)).order_by(Fine.created_at.desc()).all() if vessel_ids else []
         permits = PermitModel.query.filter_by(holder_id=user.id).order_by(PermitModel.created_at.desc()).all()
+        log_entries = FishingLogEntry.query.filter_by(created_by=user.id).order_by(FishingLogEntry.created_at.desc()).all()
     elif user.role == 'inspector':
         acts = InspectionAct.query.filter_by(inspector_id=user.id).order_by(InspectionAct.created_at.desc()).all()
         fines = Fine.query.filter_by(inspector_id=user.id).order_by(Fine.created_at.desc()).all()
 
-    return render_template('profile.html', user=user, vessels=vessels, fines=fines, acts=acts, permits=permits)
+    return render_template('profile.html', user=user, vessels=vessels, fines=fines, acts=acts, permits=permits, log_entries=log_entries)
 
 
 @app.route('/pay/<int:fine_id>', methods=['GET', 'POST'])

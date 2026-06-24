@@ -42,7 +42,14 @@
         </div>
         <div class="detail-row">
             <span class="detail-label">Място</span>
-            <span class="detail-value">{{ act.location or '—' }}</span>
+            <span class="detail-value">
+                {{ act.location or '—' }}
+                {% if user.role in ('admin', 'inspector') and act.location %}
+                    {% with map_id='act_map_' + act.id|string, raw_value=act.location, title='Място на проверка' %}
+                        {% include 'map/point_view.html' %}
+                    {% endwith %}
+                {% endif %}
+            </span>
         </div>
         {% if act.related_permit %}
         <div class="detail-row">

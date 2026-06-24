@@ -1,0 +1,86 @@
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}">
+
+<a href="#" class="map-view-link" onclick="event.preventDefault();openRouteView('{{ map_id }}')">
+  Покажи маршрут
+</a>
+
+<div id="{{ map_id }}_modal" class="map-modal-overlay">
+  <div class="map-modal-box">
+    <div class="map-modal-head">
+      <h3>{{ title or 'Маршрут' }}</h3>
+      <button type="button" class="close-btn" onclick="document.getElementById('{{ map_id }}_modal').style.display='none'">&times;</button>
+    </div>
+    <div class="map-route-info">
+      <span><span class="dot dot-green"></span> <strong>Старт:</strong> {{ start_label }}</span>
+      <span><span class="dot dot-red"></span> <strong>Край:</strong> {{ end_label }}</span>
+      <span class="dist" id="{{ map_id }}_dist"></span>
+    </div>
+    <div id="{{ map_id }}_map" class="map-container" style="height:420px"></div>
+    <div class="map-modal-foot">
+      <button type="button" class="btn-close-view" onclick="document.getElementById('{{ map_id }}_modal').style.display='none'">Затвори</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+if (!window.routeViewInstances) window.routeViewInstances = {};
+
+function openRouteView(mapId) {
+  document.getElementById(mapId + '_modal').style.display = 'flex';
+  var startRaw = '{{ start_raw|e }}';
+  var endRaw = '{{ end_raw|e }}';
+  function parseCoord(s) {
+    if (!s) return null;
+    var m = s.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+    return m ? [parseFloat(m[1]), parseFloat(m[2])] : null;
+  }
+  function resolveText(text, cb) {
+    if (parseCoord(text)) return cb(null);
+    if (!text || text === '-') return cb(null);
+    fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(text) + '&limit=1')
+      .then(function(r) { return r.json(); })
+      .then(function(d) { cb(d && d.length > 0 ? [parseFloat(d[0].lat), parseFloat(d[0].lon)] : null); });
+  }
+  setTimeout(function() {
+    if (window.routeViewInstances[mapId]) {
+      window.routeViewInstances[mapId].map.invalidateSize();
+      return;
+    }
+    var startPt = parseCoord(startRaw), endPt = parseCoord(endRaw);
+    var initLat = 42.65, initLng = 28.1, zoom = 9;
+    if (startPt && endPt) { initLat = (startPt[0] + endPt[0]) / 2; initLng = (startPt[1] + endPt[1]) / 2; zoom = 10; }
+    else if (startPt) { initLat = startPt[0]; initLng = startPt[1]; zoom = 10; }
+    else if (endPt) { initLat = endPt[0]; initLng = endPt[1]; zoom = 10; }
+    var map = L.map(document.getElementById(mapId + '_map'), {
+      maxBounds: [[41.5, 27.2], [43.8, 29.0]], minZoom: 8
+    }).setView([initLat, initLng], zoom);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 16, attribution: 'OpenStreetMap'
+    }).addTo(map);
+
+    function icn(bg) { return L.divIcon({className:'',html:'<div style="background:'+bg+';width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3)"></div>',iconSize:[14,14],iconAnchor:[7,7]}); }
+
+    function placeRoute(s, e) {
+      var pts = [];
+      if (s) { L.marker(s, {icon: icn('#16a34a')}).addTo(map).bindPopup('<strong>Старт:</strong> '+startRaw); pts.push(s); }
+      if (e) { L.marker(e, {icon: icn('#dc2626')}).addTo(map).bindPopup('<strong>Край:</strong> '+endRaw); pts.push(e); }
+      if (pts.length === 2) {
+        var line = L.polyline(pts, {color: '#2563eb', weight: 3, opacity: 0.7, dashArray: '8,6'}).addTo(map);
+        var dist = map.distance(pts[0], pts[1]);
+        document.getElementById(mapId + '_dist').textContent = 'Разстояние: ' + (dist > 1000 ? (dist / 1000).toFixed(1) + ' km' : dist.toFixed(0) + ' m');
+        map.fitBounds(line.getBounds(), {padding: [50, 50]});
+      }
+    }
+    if (startPt && endPt) { placeRoute(startPt, endPt); }
+    else {
+      var r = [null, null];
+      resolveText(startRaw, function(pt) { r[0] = pt; if (r[0] || r[1]) placeRoute(r[0], r[1]); });
+      resolveText(endRaw, function(pt) { r[1] = pt; if (r[0] || r[1]) placeRoute(r[0], r[1]); });
+    }
+    window.routeViewInstances[mapId] = { map: map };
+    setTimeout(function() { map.invalidateSize(); }, 100);
+  }, 100);
+}
+</script>

@@ -151,6 +151,46 @@
         {% endif %}
     </div>
 
+    <div class="profile-section">
+        <div class="section-header">
+            <h2>Електронен дневник ({{ log_entries|length }})</h2>
+            <a href="{{ url_for('logbookBp.list_entries') }}" class="btn-action btn-approve">Всички записи</a>
+        </div>
+        {% if log_entries %}
+        <table>
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Кораб</th>
+                    <th>Начало</th>
+                    <th>Край</th>
+                    <th>Улов (кг)</th>
+                    <th>Статус</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in log_entries[:10] %}
+                {% set total_kg = entry.catches | sum(attribute='quantity_kg') %}
+                {% set lstatus_label = 'Чернова' if entry.status == 'draft' else 'Изпратен' if entry.status == 'submitted' else 'Потвърден' %}
+                {% set lstatus_class = 'pending' if entry.status == 'draft' else 'approved' if entry.status == 'submitted' else 'paid' %}
+                <tr>
+                    <td><strong>{{ entry.id }}</strong></td>
+                    <td>{{ entry.vessel.cfr_number }}</td>
+                    <td>{{ entry.start_datetime.strftime('%d.%m.%Y %H:%M') }}</td>
+                    <td>{{ entry.end_datetime.strftime('%d.%m.%Y %H:%M') if entry.end_datetime else '—' }}</td>
+                    <td>{{ '%.2f'|format(total_kg) }} кг</td>
+                    <td><span class="badge badge-{{ lstatus_class }}">{{ lstatus_label }}</span></td>
+                    <td><a href="{{ url_for('logbookBp.entry_detail', entry_id=entry.id) }}" class="btn-link">Преглед</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">Няма записи в електронния дневник.</div>
+        {% endif %}
+    </div>
+
     {% elif user.role == 'inspector' %}
     <div class="profile-section">
         <div class="section-header">
