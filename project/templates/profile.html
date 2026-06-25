@@ -191,6 +191,39 @@
         {% endif %}
     </div>
 
+    <div class="profile-section">
+        <div class="section-header">
+            <h2>Разтоварвания ({{ fish_landings|length }})</h2>
+            <a href="{{ url_for('traceBp.list_landings') }}" class="btn-action btn-approve">Всички</a>
+        </div>
+        {% if fish_landings %}
+        <table>
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Дата</th>
+                    <th>Място</th>
+                    <th>Партиди</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for landing in fish_landings %}
+                <tr>
+                    <td><strong>{{ landing.id }}</strong></td>
+                    <td>{{ landing.landing_date.strftime('%d.%m.%Y') }}</td>
+                    <td>{{ landing.location or '—' }}</td>
+                    <td><span class="badge badge-info">{{ landing.batches|length }}</span></td>
+                    <td><a href="{{ url_for('traceBp.landing_detail', landing_id=landing.id) }}" class="btn-link">Преглед</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">Няма регистрирани разтоварвания.</div>
+        {% endif %}
+    </div>
+
     {% elif user.role == 'inspector' %}
     <div class="profile-section">
         <div class="section-header">

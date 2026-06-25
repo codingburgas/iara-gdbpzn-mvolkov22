@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, g
-from models.models import db, VesselModel, UserModel, AdminLog, Fine, InspectionAct, PermitModel
+from models.models import db, VesselModel, UserModel, AdminLog, Fine, InspectionAct, PermitModel, FishLanding, FishBatch, TraceLocation
 from datetime import datetime
 
 adminApp = Blueprint('adminBp', __name__)
@@ -55,6 +55,9 @@ def index():
         'users':    UserModel.query.count(),
         'pending_fines': Fine.query.filter_by(status='pending').count(),
         'pending_permits': len(pending_permits),
+        'landings': FishLanding.query.count(),
+        'batches': FishBatch.query.count(),
+        'locations': TraceLocation.query.count(),
     }
     return render_template('admin/index.html', user=g.user, pending=pending_vessels, approved_without_permit=approved_without_permit, approved_with_info=approved_with_info, all_users=all_users, logs=logs, stats=stats, approved_filter=approved_filter, recent_fines=recent_fines, pending_permits=pending_permits, recent_acts=recent_acts)
 

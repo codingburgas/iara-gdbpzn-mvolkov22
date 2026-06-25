@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Обекти{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/inspections.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/trace.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/map.css') }}" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+{% endblock %}
+
+{% block content %}
+<div class="content-wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+    <div>
+      <a href="{{ url_for('traceBp.index') }}" class="back-link">Назад</a>
+      <h1 style="margin-top:0.5rem">Обекти</h1>
+    </div>
+    <div style="display:flex;gap:0.5rem">
+      <a href="{{ url_for('traceBp.create_location') }}" class="btn btn-primary">Нов обект</a>
+      {% if locations %}
+      <button type="button" class="btn-action btn-approve" onclick="openMap()">Карта</button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">Филтър:</span>
+    <a href="{{ url_for('traceBp.list_locations') }}" class="filter-btn {% if not location_type %}active{% endif %}">Всички</a>
+    <a href="{{ url_for('traceBp.list_locations', type='shop') }}" class="filter-btn {% if location_type == 'shop' %}active{% endif %}">Магазини</a>
+    <a href="{{ url_for('traceBp.list_locations', type='warehouse') }}" class="filter-btn {% if location_type == 'warehouse' %}active{% endif %}">Складове</a>
+    <a href="{{ url_for('traceBp.list_locations', type='truck') }}" class="filter-btn {% if location_type == 'truck' %}active{% endif %}">Хладилни камиони</a>
+  </div>
+
+  <form method="GET" class="search-inline" style="margin-bottom:1.25rem">
+    <input type="text" name="search" placeholder="Търсене по име, адрес, лиценз..." value="{{ search }}">
+    {% if location_type %}<input type="hidden" name="type" value="{{ location_type }}">{% endif %}
+    <button type="submit" class="btn-action btn-approve">Търси</button>
+    {% if search %}
+    <a href="{{ url_for('traceBp.list_locations', type=location_type) if location_type else url_for('traceBp.list_locations') }}" class="btn-action">Изчисти</a>
+    {% endif %}
+  </form>
+
+  {% if locations %}
+  <table>
+    <thead>
+      <tr>
+        <th>Име</th>
+        <th>Тип</th>
+        <th>Адрес</th>
+        <th>Лиценз</th>
+        <th>Статус</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for loc in locations %}
+      <tr>
+        <td><strong>{{ loc.name }}</strong></td>
+        <td><span class="badge {% if loc.location_type == 'shop' %}badge-approved{% elif loc.location_type == 'warehouse' %}badge-info{% else %}badge-pending{% endif %}">
+          {% if loc.location_type == 'shop' %}Магазин{% elif loc.location_type == 'warehouse' %}Склад{% else %}Хладилен камион{% endif %}
+        </span></td>
+        <td>{{ loc.address or '—' }}</td>
+        <td>{{ loc.license_number or '—' }}</td>
+        <td><span class="badge {% if loc.is_active %}badge-approved{% else %}badge-rejected{% endif %}">{{ 'Активен' if loc.is_active else 'Неактивен' }}</span></td>
+        <td><a href="{{ url_for('traceBp.location_detail', location_id=loc.id) }}" class="btn-link">Преглед</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <p>Няма регистрирани обекти.</p>
+    <a href="{{ url_for('traceBp.create_location') }}" class="btn btn-primary" style="margin-top:0.75rem">Нов обект</a>
+  </div>
+  {% endif %}
+</div>
+
+<div id="map-modal" class="map-modal-overlay">
+  <div class="map-modal-box">
+    <div class="map-modal-head">
+      <h3>Обекти на картата</h3>
+      <button type="button" class="close-btn" onclick="document.getElementById('map-modal').style.display='none'">&times;</button>
+    </div>
+    <div id="map-container" class="map-container" style="height:480px"></div>
+    <div class="map-modal-foot">
+      <span style="font-size:0.8rem;color:#6b7280">Геокодиране на адреси чрез Nominatim (OpenStreetMap).</span>
+      <button type="button" class="btn-close-view" onclick="document.getElementById('map-modal').style.display='none'">Затвори</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var DATA = {{ locations_json|safe }};
+var MAP = null;
+
+function openMap() {
+  var m = document.getElementById('map-modal');
+  m.style.display = 'flex';
+  setTimeout(function() {
+    if (MAP) { MAP.invalidateSize(); return; }
+    MAP = L.map('map-container', { minZoom: 7 }).setView([42.7, 27.5], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 16 }).addTo(MAP);
+
+    var pts = [], done = 0;
+    DATA.forEach(function(d) {
+      var q = d.address || d.name;
+      if (!q) { done++; if(done===DATA.length && pts.length) MAP.fitBounds(pts,{padding:[40,40]}); return; }
+      fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(q + ', България') + '&limit=1')
+        .then(function(r){return r.json()})
+        .then(function(data) {
+          if (data && data.length) {
+            var lat = parseFloat(data[0].lat), lng = parseFloat(data[0].lon);
+            var color = d.type === 'shop' ? '#0284c7' : d.type === 'warehouse' ? '#d97706' : '#7c3aed';
+            var icon = L.divIcon({className:'', html:'<div style="width:14px;height:14px;border-radius:50%;background:'+color+';border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3)"></div>', iconSize:[14,14], iconAnchor:[7,7]});
+            L.marker([lat, lng], {icon:icon}).addTo(MAP).bindPopup('<strong>'+d.name+'</strong><br>'+d.address+'<br><a href="'+d.url+'">Преглед</a>');
+            pts.push([lat, lng]);
+          }
+          done++;
+          if (done === DATA.length && pts.length) MAP.fitBounds(pts, {padding:[40,40]});
+        }).catch(function(){done++; if(done===DATA.length && pts.length) MAP.fitBounds(pts,{padding:[40,40]});});
+    });
+  }, 200);
+}
+
+window.addEventListener('click', function(e) {
+  if (e.target === document.getElementById('map-modal')) document.getElementById('map-modal').style.display = 'none';
+});
+</script>
+{% endblock %}

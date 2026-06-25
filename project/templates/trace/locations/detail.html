@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}{{ location.name }}{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/inspections.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/trace.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/map.css') }}" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+{% endblock %}
+
+{% block content %}
+<div class="content-wrap">
+  <a href="{{ url_for('traceBp.list_locations') }}" class="back-link">Назад</a>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem">
+    <h1 style="margin:0">{{ location.name }}</h1>
+    {% if user.role in ('inspector', 'admin') %}
+    <form method="POST" action="{{ url_for('traceBp.toggle_location', location_id=location.id) }}" class="inline-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn-action {% if location.is_active %}btn-reject{% else %}btn-approve{% endif %}"
+              onclick="return confirm('Промяна на статуса?')">
+        {{ 'Деактивирай' if location.is_active else 'Активирай' }}
+      </button>
+    </form>
+    {% endif %}
+  </div>
+
+  <div class="card" style="margin-top:1rem">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;font-size:0.9rem">
+      <div><span style="color:#6b7280">Тип:</span>
+        <span class="trace-stop-type-badge {{ 'shop' if location.location_type == 'shop' else 'warehouse' if location.location_type == 'warehouse' else 'truck' }}">
+          {% if location.location_type == 'shop' %}Магазин{% elif location.location_type == 'warehouse' %}Склад{% else %}Хладилен камион{% endif %}
+        </span>
+      </div>
+      <div><span style="color:#6b7280">Статус:</span>
+        <span class="badge {% if location.is_active %}badge-approved{% else %}badge-rejected{% endif %}">{{ 'Активен' if location.is_active else 'Неактивен' }}</span>
+      </div>
+      <div><span style="color:#6b7280">Адрес:</span> {{ location.address or '—' }}</div>
+      <div><span style="color:#6b7280">Собственик:</span> {{ location.owner_name or '—' }}</div>
+      <div><span style="color:#6b7280">Лиценз:</span> {{ location.license_number or '—' }}</div>
+      <div><span style="color:#6b7280">Телефон:</span> {{ location.contact_phone or '—' }}</div>
+      <div><span style="color:#6b7280">Регистриран от:</span> {{ location.creator.full_name }}</div>
+      {% if location.address or location.name %}
+      <div><a href="#" class="map-view-link" id="map-trigger"
+             data-address="{{ location.address or '' }}" data-name="{{ location.name }}"
+             onclick="event.preventDefault();openLocMap()">Покажи на карта</a></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:700;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em;color:#06b6d4;margin-bottom:0.75rem">
+      Входящи пратки ({{ incoming|length }})
+    </div>
+    {% if incoming %}
+    <table>
+      <thead>
+        <tr><th>Партида</th><th>Вид</th><th>Кг</th><th>Пристигнал</th><th>Тип</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for move in incoming %}
+        <tr>
+          <td><strong>{{ move.batch.batch_number }}</strong></td>
+          <td>{{ move.batch.species }}</td>
+          <td>{{ '%.2f'|format(move.batch.quantity_kg) }}</td>
+          <td>{{ move.arrival_date.strftime('%d.%m.%Y %H:%M') if move.arrival_date else '—' }}</td>
+          <td><span class="badge {% if move.movement_type == 'delivery' %}badge-approved{% elif move.movement_type == 'transport' %}badge-info{% else %}badge-pending{% endif %}">
+            {% if move.movement_type == 'delivery' %}Доставка{% elif move.movement_type == 'transport' %}Транспорт{% else %}Складиране{% endif %}
+          </span></td>
+          <td><a href="{{ url_for('traceBp.batch_detail', batch_id=move.batch.id) }}" class="btn-link">Път</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">Няма входящи пратки.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div style="font-weight:700;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em;color:#06b6d4;margin-bottom:0.75rem">
+      Изходящи пратки ({{ outgoing|length }})
+    </div>
+    {% if outgoing %}
+    <table>
+      <thead>
+        <tr><th>Партида</th><th>Вид</th><th>Кг</th><th>Дестинация</th><th>Дата</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for move in outgoing %}
+        <tr>
+          <td><strong>{{ move.batch.batch_number }}</strong></td>
+          <td>{{ move.batch.species }}</td>
+          <td>{{ '%.2f'|format(move.batch.quantity_kg) }}</td>
+          <td>{{ move.to_location.name }}</td>
+          <td>{{ move.arrival_date.strftime('%d.%m.%Y %H:%M') if move.arrival_date else '—' }}</td>
+          <td><a href="{{ url_for('traceBp.batch_detail', batch_id=move.batch.id) }}" class="btn-link">Път</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">Няма изходящи пратки.</div>
+    {% endif %}
+  </div>
+
+  {% if user.role == 'inspector' %}
+  <div class="card">
+    <div style="font-weight:700;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em;color:#06b6d4;margin-bottom:0.5rem">Инспекция</div>
+    <p style="font-size:0.85rem;color:#6b7280;margin-bottom:0.75rem">Създайте инспекционен акт и проверете дали рибата е с проследим произход.</p>
+    <a href="{{ url_for('inspectorBp.create_act') }}" class="btn btn-primary">Създай акт</a>
+  </div>
+  {% endif %}
+</div>
+
+<div id="loc-map-modal" class="map-modal-overlay">
+  <div class="map-modal-box">
+    <div class="map-modal-head">
+      <h3>{{ location.name }}</h3>
+      <button type="button" class="close-btn" onclick="document.getElementById('loc-map-modal').style.display='none'">&times;</button>
+    </div>
+    <div id="loc-map-cont" class="map-container" style="height:420px"></div>
+    <div class="map-modal-foot">
+      <span style="font-size:0.8rem;color:#6b7280">{{ location.address or location.name }}</span>
+      <button type="button" class="btn-close-view" onclick="document.getElementById('loc-map-modal').style.display='none'">Затвори</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var locMap = null;
+var t = document.getElementById('map-trigger');
+
+function openLocMap() {
+  var m = document.getElementById('loc-map-modal');
+  m.style.display = 'flex';
+  setTimeout(function() {
+    if (locMap) { locMap.invalidateSize(); return; }
+    locMap = L.map('loc-map-cont', { minZoom: 8 }).setView([42.7, 27.5], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 16 }).addTo(locMap);
+    var q = (t ? t.getAttribute('data-address') : '') || (t ? t.getAttribute('data-name') : '');
+    if (q) {
+      fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(q + ', България') + '&limit=1')
+        .then(function(r){return r.json()})
+        .then(function(d) {
+          if (d && d.length) { L.marker([parseFloat(d[0].lat), parseFloat(d[0].lon)]).addTo(locMap).bindPopup(q).openPopup(); locMap.setView([parseFloat(d[0].lat), parseFloat(d[0].lon)], 14); }
+        });
+    }
+  }, 200);
+}
+
+window.addEventListener('click', function(e) {
+  if (e.target === document.getElementById('loc-map-modal')) document.getElementById('loc-map-modal').style.display = 'none';
+});
+</script>
+{% endblock %}

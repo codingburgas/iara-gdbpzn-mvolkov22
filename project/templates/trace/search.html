@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Търсене на партида{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/inspections.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/trace.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="content-wrap" style="max-width:600px">
+  <a href="{{ url_for('traceBp.index') }}" class="back-link">Назад</a>
+  <h1>Търсене на партида</h1>
+
+  <form method="GET" class="search-inline" style="margin-bottom:1.5rem">
+    <input type="text" name="q" placeholder="Номер на партида или вид риба..." value="{{ query }}" required>
+    <button type="submit" class="btn btn-primary">Търси</button>
+  </form>
+
+  {% if query %}
+    {% if batches %}
+    <table>
+      <thead>
+        <tr>
+          <th>Партида</th>
+          <th>Вид</th>
+          <th>Кг</th>
+          <th>Разтоварване</th>
+          <th>Кораб</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for batch in batches %}
+        <tr>
+          <td><strong>{{ batch.batch_number }}</strong></td>
+          <td>{{ batch.species }}</td>
+          <td>{{ '%.2f'|format(batch.quantity_kg) }}</td>
+          <td><a href="{{ url_for('traceBp.landing_detail', landing_id=batch.landing.id) }}" class="btn-link">#{{ batch.landing.id }} ({{ batch.landing.landing_date.strftime('%d.%m.%Y') }})</a></td>
+          <td>{{ batch.landing.log_entry.vessel.cfr_number if batch.landing.log_entry and batch.landing.log_entry.vessel else '—' }}</td>
+          <td><a href="{{ url_for('traceBp.batch_detail', batch_id=batch.id) }}" class="btn-link">Път</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">Няма резултати за "{{ query }}".</div>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

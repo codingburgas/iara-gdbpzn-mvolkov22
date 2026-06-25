@@ -36,7 +36,7 @@ function openMapView(mapId) {
     if (m) { lat = parseFloat(m[1]); lng = parseFloat(m[2]); }
     var mapEl = document.getElementById(mapId + '_map');
     var map = L.map(mapEl, {
-      maxBounds: [[41.5, 27.2], [43.8, 29.0]], minZoom: 8
+      minZoom: 8
     }).setView([lat || 42.65, lng || 28.1], lat ? 14 : 9);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 16, attribution: 'OpenStreetMap'

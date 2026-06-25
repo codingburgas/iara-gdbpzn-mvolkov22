@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}{{ batch.batch_number }}{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/inspections.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/trace.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="content-wrap">
+  <a href="{{ url_for('traceBp.landing_detail', landing_id=batch.landing.id) }}" class="back-link">Към разтоварването</a>
+
+  <div class="card" style="margin-top:1rem">
+    <h2 style="margin:0 0 0.25rem 0">{{ batch.batch_number }}</h2>
+    <div style="color:#6b7280;font-size:0.9rem">
+      {{ batch.species }} &middot; {{ '%.2f'|format(batch.quantity_kg) }} кг &middot;
+      разтоварено на {{ batch.landing.landing_date.strftime('%d.%m.%Y') }}
+      {% if batch.landing.location %}&middot; {{ batch.landing.location }}{% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:700;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.08em;color:#06b6d4;margin-bottom:1rem">
+      Път на партидата
+    </div>
+
+    {% if batch.movements %}
+    <div class="route">
+      <div class="stop">
+        <div class="dot origin"></div>
+        <div class="info">
+          <div class="name">{{ batch.landing.log_entry.vessel.cfr_number if batch.landing.log_entry else 'Кораб' }} / {{ batch.landing.log_entry.vessel.marking if batch.landing.log_entry else '' }}</div>
+          <div class="meta">{{ batch.landing.landing_date.strftime('%d.%m.%Y') }} &middot; {{ batch.landing.location or 'разтоварване' }}</div>
+          <div class="tags">
+            <span>{{ batch.species }}</span>
+            <span>{{ '%.2f'|format(batch.quantity_kg) }} кг</span>
+          </div>
+        </div>
+      </div>
+
+      {% for move in batch.movements %}
+      <div class="leg">
+        <div class="leg-line"></div>
+        <div class="leg-info">
+          <span>
+            {% if move.movement_type == 'transport' %}Транспорт
+            {% elif move.movement_type == 'storage' %}Складиране
+            {% elif move.movement_type == 'delivery' %}Доставка до магазин
+            {% endif %}
+          </span>
+          <span class="leg-date">{{ move.arrival_date.strftime('%d.%m.%Y %H:%M') if move.arrival_date else '' }}</span>
+        </div>
+      </div>
+
+      <div class="stop">
+        <div class="dot {{ 'shop' if move.to_location.location_type == 'shop' else 'warehouse' if move.to_location.location_type == 'warehouse' else 'truck' }}"></div>
+        <div class="info">
+          <div class="name">{{ move.to_location.name }}</div>
+          <div class="meta">
+            {% if move.to_location.location_type == 'shop' %}Магазин
+            {% elif move.to_location.location_type == 'warehouse' %}Склад
+            {% elif move.to_location.location_type == 'truck' %}Хладилен камион
+            {% endif %}
+            {% if move.to_location.address %} &middot; {{ move.to_location.address }}{% endif %}
+          </div>
+          {% if move.from_location %}
+          <div class="meta" style="color:#6b7280">от: {{ move.from_location.name }}</div>
+          {% endif %}
+          {% if move.notes %}
+          <div class="meta" style="font-style:italic;color:#6b7280">{{ move.notes }}</div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="text-align:left">
+      <p style="margin:0 0 0.25rem 0">Партидата няма движения.</p>
+      <p style="margin:0;font-size:0.85rem;color:#6b7280">Изберете дестинация от формата долу, за да регистрирате първото движение.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div style="font-weight:700;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.08em;color:#06b6d4;margin-bottom:1rem">
+      Ново движение
+    </div>
+
+    <div id="no-locations" class="empty-state" style="display:none;text-align:left">
+      <p style="margin:0 0 0.5rem 0">Няма регистрирани обекти.</p>
+      <a href="{{ url_for('traceBp.create_location') }}" class="btn btn-primary">Регистрирай обект</a>
+    </div>
+
+    <form method="POST" action="{{ url_for('traceBp.move_batch', batch_id=batch.id) }}" id="move-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Тип</label>
+          <select name="movement_type">
+            <option value="transport">Транспорт</option>
+            <option value="storage">Складиране</option>
+            <option value="delivery">Доставка до магазин</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Дестинация</label>
+          <select name="to_location_id" id="to-loc" required>
+            <option value="">— избери —</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>От обект (ако има)</label>
+          <select name="from_location_id" id="from-loc">
+            <option value="">— без —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Дата на пристигане</label>
+          <input type="datetime-local" name="arrival_date" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Бележки</label>
+        <textarea name="notes" rows="2"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-approve">Запиши</button>
+    </form>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+fetch('/trace/api/locations').then(function(r){return r.json()}).then(function(ll){
+  var to = document.getElementById('to-loc');
+  var fr = document.getElementById('from-loc');
+  var no = document.getElementById('no-locations');
+  var fm = document.getElementById('move-form');
+  if(ll.length===0){no.style.display='block';fm.style.display='none';return;}
+  ll.forEach(function(l){
+    var t=document.createElement('option');t.value=l.id;t.textContent=l.name+' ('+l.type+')';to.appendChild(t);
+    var f=document.createElement('option');f.value=l.id;f.textContent=l.name+' ('+l.type+')';fr.appendChild(f);
+  });
+});
+</script>
+{% endblock %}

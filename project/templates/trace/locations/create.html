@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Регистриране на обект{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/inspections.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/trace.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="form-wrap">
+    <a href="{{ url_for('traceBp.list_locations') }}" class="back-link">Назад</a>
+    <h1>Регистриране на обект</h1>
+
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+            <label>Тип на обекта</label>
+            <select name="location_type" required>
+                <option value="shop">Магазин</option>
+                <option value="warehouse">Склад (складиране)</option>
+                <option value="truck">Хладилен камион (транспорт)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Име на обекта *</label>
+            <input type="text" name="name" placeholder="Напр. Магазин Риба ЕООД, Варна" required>
+        </div>
+
+        <div class="form-group">
+            <label>Адрес</label>
+            <input type="text" name="address" placeholder="Улица, град, област">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Собственик</label>
+                <input type="text" name="owner_name" placeholder="Име на собственика">
+            </div>
+            <div class="form-group">
+                <label>Лиценз №</label>
+                <input type="text" name="license_number" placeholder="Номер на лиценз">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Телефон за контакт</label>
+            <input type="text" name="contact_phone" placeholder="+359...">
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('traceBp.list_locations') }}" class="btn btn-back">Отказ</a>
+            <button type="submit" class="btn btn-approve">Регистрирай</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Проследяване на риба{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/inspections.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/trace.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="content-wrap">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap">
+    <div>
+      <h1 style="margin:0">Проследяване на рибата</h1>
+      <p style="margin:0.25rem 0 0 0;color:#6b7280;font-size:0.85rem">
+        Пътят на рибата от кораба до магазина &mdash; разтоварвания, партиди и движение между обекти.
+      </p>
+    </div>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+      <a href="{{ url_for('traceBp.create_location') }}" class="btn-action btn-approve">Нов обект</a>
+      {% if user.role in ('user', 'admin') %}
+      <a href="{{ url_for('traceBp.create_landing') }}" class="btn btn-primary">Ново разтоварване</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="nav-grid">
+    <a href="{{ url_for('traceBp.list_landings') }}">
+      <div class="title">Разтоварвания</div>
+      <div class="desc">Регистриране на разтоварен улов от кораби</div>
+    </a>
+    <a href="{{ url_for('traceBp.list_locations') }}">
+      <div class="title">Обекти</div>
+      <div class="desc">Магазини, складове и хладилни камиони</div>
+    </a>
+    <a href="{{ url_for('traceBp.search') }}">
+      <div class="title">Търсене</div>
+      <div class="desc">Проследяване на партида по номер или вид риба</div>
+    </a>
+  </div>
+
+  {% if recent_landings %}
+  <div class="card">
+    <div style="font-weight:700;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em;color:#06b6d4;margin-bottom:0.75rem">
+      Последни разтоварвания
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>№</th>
+          <th>Дата</th>
+          <th>Място</th>
+          <th>Кораб</th>
+          <th>Партиди</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for landing in recent_landings %}
+        <tr>
+          <td><strong>{{ landing.id }}</strong></td>
+          <td>{{ landing.landing_date.strftime('%d.%m.%Y') }}</td>
+          <td>{{ landing.location or '—' }}</td>
+          <td>{{ landing.log_entry.vessel.cfr_number if landing.log_entry and landing.log_entry.vessel else '—' }}</td>
+          <td>{{ landing.batches|length }}</td>
+          <td><a href="{{ url_for('traceBp.landing_detail', landing_id=landing.id) }}" class="btn-link">Преглед</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -159,3 +159,65 @@ class CatchEntry(db.Model):
     notes = db.Column(db.Text)
 
     log_entry = db.relationship('FishingLogEntry', back_populates='catches')
+
+
+class FishLanding(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    log_entry_id = db.Column(db.Integer, db.ForeignKey('fishing_log_entry.id'), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('user_model.id'), nullable=False)
+    landing_date = db.Column(db.Date, nullable=False)
+    location = db.Column(db.String(200))
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+
+    log_entry = db.relationship('FishingLogEntry', backref='landings', lazy=True)
+    creator = db.relationship('UserModel', foreign_keys=[created_by])
+    batches = db.relationship('FishBatch', back_populates='landing', lazy=True, cascade='all, delete-orphan')
+
+
+class FishBatch(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    batch_number = db.Column(db.String(30), unique=True, nullable=False)
+    landing_id = db.Column(db.Integer, db.ForeignKey('fish_landing.id'), nullable=False)
+    species = db.Column(db.String(100), nullable=False)
+    quantity_kg = db.Column(db.Float, nullable=False)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+
+    landing = db.relationship('FishLanding', back_populates='batches')
+    movements = db.relationship('BatchMovement', back_populates='batch', lazy=True, cascade='all, delete-orphan')
+
+
+class TraceLocation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    location_type = db.Column(db.Enum('shop', 'warehouse', 'truck'), nullable=False)
+    name = db.Column(db.String(200), nullable=False)
+    address = db.Column(db.String(300))
+    owner_name = db.Column(db.String(200))
+    license_number = db.Column(db.String(50))
+    contact_phone = db.Column(db.String(20))
+    is_active = db.Column(db.Boolean, default=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('user_model.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+
+    creator = db.relationship('UserModel', foreign_keys=[created_by])
+    incoming_movements = db.relationship('BatchMovement', foreign_keys='BatchMovement.to_location_id', back_populates='to_location', lazy=True)
+    outgoing_movements = db.relationship('BatchMovement', foreign_keys='BatchMovement.from_location_id', back_populates='from_location', lazy=True)
+
+
+class BatchMovement(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    batch_id = db.Column(db.Integer, db.ForeignKey('fish_batch.id'), nullable=False)
+    from_location_id = db.Column(db.Integer, db.ForeignKey('trace_location.id'), nullable=True)
+    to_location_id = db.Column(db.Integer, db.ForeignKey('trace_location.id'), nullable=False)
+    movement_type = db.Column(db.Enum('landing', 'transport', 'storage', 'delivery'), nullable=False)
+    departure_date = db.Column(db.DateTime, nullable=True)
+    arrival_date = db.Column(db.DateTime, nullable=False)
+    notes = db.Column(db.Text)
+    created_by = db.Column(db.Integer, db.ForeignKey('user_model.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+
+    batch = db.relationship('FishBatch', back_populates='movements')
+    from_location = db.relationship('TraceLocation', foreign_keys=[from_location_id], back_populates='outgoing_movements')
+    to_location = db.relationship('TraceLocation', foreign_keys=[to_location_id], back_populates='incoming_movements')
+    creator = db.relationship('UserModel', foreign_keys=[created_by])

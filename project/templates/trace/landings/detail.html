@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Разтоварване #{{ landing.id }}{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/inspections.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/trace.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="content-wrap">
+  <a href="{{ url_for('traceBp.list_landings') }}" class="back-link">Назад</a>
+
+  <div class="card" style="margin-top:1rem">
+    <h2 style="margin:0 0 0.75rem 0">Разтоварване #{{ landing.id }}</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;font-size:0.9rem">
+      <div><span style="color:#6b7280">Дата:</span> {{ landing.landing_date.strftime('%d.%m.%Y') }}</div>
+      <div><span style="color:#6b7280">Място:</span> {{ landing.location or '—' }}</div>
+      <div><span style="color:#6b7280">Кораб:</span>
+        {% if landing.log_entry and landing.log_entry.vessel %}
+        {{ landing.log_entry.vessel.cfr_number }} / {{ landing.log_entry.vessel.marking }}
+        {% else %}—{% endif %}
+      </div>
+      <div><span style="color:#6b7280">От:</span> {{ landing.creator.full_name }}</div>
+    </div>
+    {% if landing.notes %}
+    <div style="margin-top:0.5rem;font-size:0.85rem;color:#6b7280">{{ landing.notes }}</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+      <div style="font-weight:700;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em;color:#06b6d4">
+        Партиди ({{ landing.batches|length }})
+      </div>
+      <button class="btn-action btn-approve" onclick="document.getElementById('add-batch').style.display=document.getElementById('add-batch').style.display==='none'?'block':'none'">+ Добави</button>
+    </div>
+
+    <div id="add-batch" class="note-form hidden" style="margin-bottom:0.75rem">
+      <form method="POST" action="{{ url_for('traceBp.add_batch', landing_id=landing.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-row">
+          <input type="text" name="species" placeholder="Вид риба" required>
+          <input type="number" name="quantity_kg" placeholder="Кг" step="0.01" min="0.01" required>
+        </div>
+        <button type="submit" class="btn-action btn-approve" style="margin-top:0.4rem">Добави</button>
+      </form>
+    </div>
+
+    {% if landing.batches %}
+    <table>
+      <thead>
+        <tr>
+          <th>Партида</th>
+          <th>Вид</th>
+          <th>Кг</th>
+          <th>Движения</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for batch in landing.batches %}
+        <tr>
+          <td><strong>{{ batch.batch_number }}</strong></td>
+          <td>{{ batch.species }}</td>
+          <td>{{ '%.2f'|format(batch.quantity_kg) }}</td>
+          <td><span class="badge {% if batch.movements %}badge-info{% else %}badge-pending{% endif %}">{{ batch.movements|length }}</span></td>
+          <td><a href="{{ url_for('traceBp.batch_detail', batch_id=batch.id) }}" class="btn-link">Път</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">Няма партиди.</div>
+    {% endif %}
+  </div>
+
+  {% if user.role == 'inspector' %}
+  <div class="card">
+    <div style="font-weight:700;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em;color:#06b6d4;margin-bottom:0.5rem">Инспекция</div>
+    <p style="font-size:0.85rem;color:#6b7280;margin-bottom:0.75rem">Създайте инспекционен акт за това разтоварване.</p>
+    <a href="{{ url_for('inspectorBp.create_act') }}" class="btn btn-primary">Създай акт</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

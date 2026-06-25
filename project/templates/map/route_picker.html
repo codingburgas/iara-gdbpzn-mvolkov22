@@ -63,7 +63,7 @@ function openRoutePicker(mid) {
     else if (startPt) { initLat = startPt.lat; initLng = startPt.lng; zoom = 12; }
     else if (endPt) { initLat = endPt.lat; initLng = endPt.lng; zoom = 12; }
     var map = L.map(document.getElementById(mid + '_map'), {
-      maxBounds: [[41.5, 27.2], [43.8, 29.0]], minZoom: 8
+      minZoom: 8
     }).setView([initLat, initLng], zoom);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 16, attribution: 'OpenStreetMap'

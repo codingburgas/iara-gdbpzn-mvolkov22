@@ -50,7 +50,7 @@ function openMapPicker(fid) {
     }
     var marker = null;
     var map = L.map(document.getElementById(fid + '_map'), {
-      maxBounds: [[41.5, 27.2], [43.8, 29.0]], minZoom: 8
+      minZoom: 8
     }).setView([lat, lng], zoom);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 16, attribution: 'OpenStreetMap'

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Разтоварвания{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/inspections.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/trace.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="content-wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+    <div>
+      <a href="{{ url_for('traceBp.index') }}" class="back-link">Назад</a>
+      <h1 style="margin-top:0.5rem">Разтоварвания</h1>
+    </div>
+    {% if user.role in ('user', 'admin') %}
+    <a href="{{ url_for('traceBp.create_landing') }}" class="btn btn-primary">Ново разтоварване</a>
+    {% endif %}
+  </div>
+
+  <form method="GET" class="search-inline" style="margin-bottom:1.25rem">
+    <input type="text" name="search" placeholder="Търсене по кораб, CFR, място..." value="{{ search }}">
+    <button type="submit" class="btn-action btn-approve">Търси</button>
+    {% if search %}
+    <a href="{{ url_for('traceBp.list_landings') }}" class="btn-action">Изчисти</a>
+    {% endif %}
+  </form>
+
+  {% if landings %}
+  <table>
+    <thead>
+      <tr>
+        <th>№</th>
+        <th>Дата</th>
+        <th>Място</th>
+        <th>Кораб</th>
+        <th>Партиди</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for landing in landings %}
+      <tr>
+        <td><strong>{{ landing.id }}</strong></td>
+        <td>{{ landing.landing_date.strftime('%d.%m.%Y') }}</td>
+        <td>{{ landing.location or '—' }}</td>
+        <td>{% if landing.log_entry and landing.log_entry.vessel %}{{ landing.log_entry.vessel.cfr_number }}{% else %}—{% endif %}</td>
+        <td><span class="badge badge-info">{{ landing.batches|length }}</span></td>
+        <td><a href="{{ url_for('traceBp.landing_detail', landing_id=landing.id) }}" class="btn-link">Преглед</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <p>Няма разтоварвания.</p>
+    {% if user.role in ('user', 'admin') %}
+    <a href="{{ url_for('traceBp.create_landing') }}" class="btn btn-primary" style="margin-top:0.75rem">Ново разтоварване</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

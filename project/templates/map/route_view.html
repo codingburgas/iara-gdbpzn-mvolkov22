@@ -54,7 +54,7 @@ function openRouteView(mapId) {
     else if (startPt) { initLat = startPt[0]; initLng = startPt[1]; zoom = 10; }
     else if (endPt) { initLat = endPt[0]; initLng = endPt[1]; zoom = 10; }
     var map = L.map(document.getElementById(mapId + '_map'), {
-      maxBounds: [[41.5, 27.2], [43.8, 29.0]], minZoom: 8
+      minZoom: 8
     }).setView([initLat, initLng], zoom);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 16, attribution: 'OpenStreetMap'

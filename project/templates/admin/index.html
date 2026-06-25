@@ -3,6 +3,7 @@
 
 {% block extra_css %}
 <link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/trace.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
@@ -56,6 +57,7 @@
         </button>
         <button class="tab" onclick="showTab('acts', this)">Актове</button>
         <button class="tab" onclick="showTab('logs', this)">Логове</button>
+        <button class="tab" onclick="showTab('trace', this)">Проследяване</button>
     </div>
 
     <!-- Vessels tab -->
@@ -402,6 +404,42 @@
         {% else %}
         <div class="empty-state">Няма актове за проверка</div>
         {% endif %}
+    </div>
+
+    <!-- Trace tab -->
+    <div id="tab-trace" class="tab-content hidden">
+        <div class="page-header-between" style="margin-bottom:1rem">
+            <h3 style="margin:0">Проследяване на рибата</h3>
+            <a href="{{ url_for('traceBp.index') }}" class="btn-action btn-approve">Към проследяването</a>
+        </div>
+        <div class="stats-grid" style="margin-bottom:1.5rem">
+            <div class="stat-card">
+                <div class="stat-number approved">{{ stats.landings|default(0) }}</div>
+                <div class="stat-label">Разтоварвания</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number users">{{ stats.batches|default(0) }}</div>
+                <div class="stat-label">Партиди</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number pending">{{ stats.locations|default(0) }}</div>
+                <div class="stat-label">Обекти</div>
+            </div>
+        </div>
+        <div class="nav-cards">
+            <a href="{{ url_for('traceBp.list_landings') }}" class="nav-card">
+                <div class="nav-card-title">Разтоварвания</div>
+                <div class="nav-card-desc">Преглед на всички разтоварвания на риба</div>
+            </a>
+            <a href="{{ url_for('traceBp.list_locations') }}" class="nav-card">
+                <div class="nav-card-title">Обекти</div>
+                <div class="nav-card-desc">Магазини, складове и хладилни камиони</div>
+            </a>
+            <a href="{{ url_for('traceBp.search') }}" class="nav-card">
+                <div class="nav-card-title">Търсене</div>
+                <div class="nav-card-desc">Проследяване на партида по номер</div>
+            </a>
+        </div>
     </div>
 
     <!-- Logs tab -->
