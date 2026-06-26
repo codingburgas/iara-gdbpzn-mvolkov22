@@ -6,15 +6,398 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="index-content">
-        <h1>Добре дошли в ИАРА</h1>
-        <p>Изпълнителна агенция по рибарство и аквакултури</p>
-        {% if not user %}
-        <a href="{{ url_for('auth.register') }}">Регистрирайте се</a>
-        {% elif user.role == 'user' %}
-        <a href="{{ url_for('index') }}">Към системата</a>
-        {% endif %}
+
+<!-- Hero section -->
+<section class="hero" id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-shapes">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+    <div class="shape shape-4"></div>
+  </div>
+  <video class="hero-video active" id="heroVideo1" muted playsinline poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1920' height='1080'%3E%3Crect fill='%23001a33' width='1920' height='1080'/%3E%3C/svg%3E">
+    <source src="https://cdn.pixabay.com/video/2016/05/01/2946-164933125_large.mp4" type="video/mp4">
+  </video>
+  <video class="hero-video" id="heroVideo2" muted playsinline>
+    <source src="https://cdn.pixabay.com/video/2020/07/07/44130-438258965_large.mp4" type="video/mp4">
+  </video>
+  <div class="hero-fade" id="heroFade"></div>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-deco-left" aria-hidden="true">
+    <span class="hdl-year">2026</span>
+    <span class="hdl-line"></span>
+    <span class="hdl-text">Информационна система</span>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-left-accent" aria-hidden="true"></div>
+    <div class="hero-top">
+      <h1>
+        <span class="hero-title-line">Изпълнителна агенция</span>
+        <span class="hero-title-line accent">по рибарство и аквакултури</span>
+      </h1>
+      <p class="hero-sub" id="typed-sub"></p>
     </div>
-</div>
+    <div class="hero-btns">
+      {% if not user %}
+      <a href="{{ url_for('auth.login') }}" class="btn btn-primary">
+        Вход в системата
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="{{ url_for('auth.register') }}" class="btn btn-outline">Регистрация</a>
+      {% elif user.role == 'user' %}
+      <a href="/vessels" class="btn btn-primary">
+        Моите кораби
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="/permits" class="btn btn-outline">Разрешителни</a>
+      {% elif user.role == 'inspector' %}
+      <a href="{{ url_for('inspectorBp/dashboard') }}" class="btn btn-primary">
+        Инспекции
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="{{ url_for('traceBp.index') }}" class="btn btn-outline">Проследяване</a>
+      {% elif user.role == 'admin' %}
+      <a href="/admin" class="btn btn-primary">
+        Админ панел
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="{{ url_for('traceBp.index') }}" class="btn btn-outline">Проследяване</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><circle cx="12" cy="5" r="3"/><line x1="12" y1="8" x2="12" y2="21"/><path d="M5 12H2a10 10 0 0020 0h-3"/></svg>
+  </div>
+</section>
+
+<!-- Rights section -->
+<section class="rights-bar">
+  <div class="rights-inner">
+    <div class="rights-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      <span>Официален портал на ИАРА</span>
+    </div>
+    <div class="rights-divider"></div>
+    <div class="rights-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+      <span>Всички права запазени</span>
+    </div>
+    <div class="rights-divider"></div>
+    <div class="rights-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>Работно време: 08:30 - 17:00</span>
+    </div>
+  </div>
+</section>
+
+<!-- About section -->
+<section class="about-section" id="about">
+  <div class="about-layout">
+    <div class="about-text-side">
+      <span class="section-tag">За нас</span>
+      <h2>Цялостно управление на рибарския сектор</h2>
+      <p>От 2007 година ИАРА осъществява държавната политика в областта на рибарството и аквакултурите, като гарантира устойчиво стопанисване на водните ресурси на Република България.</p>
+      <div class="about-features">
+        <div class="about-feature">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 13l4 4L19 7"/></svg>
+          <span>Електронни разрешителни и регистри</span>
+        </div>
+        <div class="about-feature">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 13l4 4L19 7"/></svg>
+          <span>Проследяване в реално време</span>
+        </div>
+        <div class="about-feature">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 13l4 4L19 7"/></svg>
+          <span>Мобилно приложение за инспектори</span>
+        </div>
+        <div class="about-feature">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M5 13l4 4L19 7"/></svg>
+          <span>Електронен дневник за кораби</span>
+        </div>
+      </div>
+    </div>
+    <div class="about-carousel-side">
+      <div class="about-carousel" id="aboutCarousel">
+        <div class="about-carousel-track">
+          <div class="about-carousel-slide active">
+            <img src="{{ url_for('static', filename='images/about-1.jpg') }}" alt="Рибарски кораб">
+            <div class="about-carousel-caption">Изпълнителна агенция по рибарство и аквакултури</div>
+          </div>
+          <div class="about-carousel-slide">
+            <img src="{{ url_for('static', filename='images/about-2.jpg') }}" alt="Риба">
+            <div class="about-carousel-caption">Обща политика в областта на рибарството</div>
+          </div>
+          <div class="about-carousel-slide">
+            <img src="{{ url_for('static', filename='images/about-3.jpg') }}" alt="Океан">
+            <div class="about-carousel-caption">Нормативни уредби</div>
+          </div>
+        </div>
+        <div class="about-carousel-nav">
+          <button class="ac-btn" id="acPrev">&lsaquo;</button>
+          <div class="ac-dots" id="acDots"></div>
+          <button class="ac-btn" id="acNext">&rsaquo;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="about-cards">
+    <div class="about-mini-card">
+      <div class="about-mini-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+      </div>
+      <h3>Регистър на корабите</h3>
+      <p>Пълен регистър на риболовните кораби с идентификация, собственици и технически параметри.</p>
+    </div>
+    <div class="about-mini-card">
+      <div class="about-mini-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      </div>
+      <h3>Разрешителни за риболов</h3>
+      <p>Издаване и управление на разрешителни за стопански риболов – уреди, капитани, излети.</p>
+    </div>
+    <div class="about-mini-card">
+      <div class="about-mini-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <h3>Електронен дневник</h3>
+      <p>Корабите над 10м подават електронен дневник – кога, къде, с какви уреди и колко риба.</p>
+    </div>
+    <div class="about-mini-card">
+      <div class="about-mini-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+      </div>
+      <h3>Проследяване на рибата</h3>
+      <p>От кораба до магазина – пълна проследимост. Инспектори с таблети в реално време.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Stats section -->
+<section class="stats-section">
+  <div class="stats-wave-top" aria-hidden="true">
+    <svg viewBox="0 0 1440 60" preserveAspectRatio="none">
+      <path d="M0,60 L0,30 C120,0 240,60 360,30 C480,0 600,60 720,30 C840,0 960,60 1080,30 C1200,0 1320,60 1440,30 L1440,60 Z" fill="#0f172a"/>
+    </svg>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-item">
+      <div class="stat-number" data-target="1200">0</div>
+      <div class="stat-label">Регистрирани кораби</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" data-target="50000">0</div>
+      <div class="stat-label">Билета годишно</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" data-target="24">0</div>
+      <div class="stat-label">Регионални дирекции</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" data-target="365">0</div>
+      <div class="stat-label">Дни наблюдение</div>
+    </div>
+  </div>
+  <div class="stats-wave-bottom" aria-hidden="true">
+    <svg viewBox="0 0 1440 60" preserveAspectRatio="none">
+      <path d="M0,0 L0,30 C120,60 240,0 360,30 C480,60 600,0 720,30 C840,60 960,0 1080,30 C1200,60 1320,0 1440,30 L1440,0 Z" fill="#0f172a"/>
+    </svg>
+  </div>
+</section>
+
+<!-- Tickets section -->
+<section class="tickets-section">
+  <div class="tickets-inner">
+    <div class="tickets-header">
+      <span class="section-tag">Билети</span>
+      <h2>Билет за любителски риболов</h2>
+      <p>Закупете билет онлайн. Цените зависят от срока на валидност и възрастта. За инвалиди с ТЕЛК – безплатно.</p>
+    </div>
+
+    <div class="tickets-tabs">
+      <button class="ticket-tab active" data-tab="standard">Стандартен</button>
+      <button class="ticket-tab" data-tab="reduced">Намален (над 14г / пенсионер)</button>
+      <button class="ticket-tab" data-tab="disabled">Инвалид (ТЕЛК)</button>
+    </div>
+
+    <div class="tickets-grid" id="ticketsGrid">
+      <div class="tickets-row" data-type="standard">
+        <div class="ticket-card">
+          <div class="ticket-period">1 седмица</div>
+          <div class="ticket-price">6,14 <span>€</span></div>
+          <div class="ticket-desc">7 дни валидност</div>
+        </div>
+        <div class="ticket-card">
+          <div class="ticket-period">1 месец</div>
+          <div class="ticket-price">8,18 <span>€</span></div>
+          <div class="ticket-desc">30 дни валидност</div>
+        </div>
+        <div class="ticket-card featured">
+          <div class="ticket-badge">Популярен</div>
+          <div class="ticket-period">6 месеца</div>
+          <div class="ticket-price">15,34 <span>€</span></div>
+          <div class="ticket-desc">Полугодишен абонамент</div>
+        </div>
+        <div class="ticket-card">
+          <div class="ticket-period">1 година</div>
+          <div class="ticket-price">25,56 <span>€</span></div>
+          <div class="ticket-desc">Годишен абонамент</div>
+        </div>
+      </div>
+      <div class="tickets-row hidden" data-type="reduced">
+        <div class="ticket-card">
+          <div class="ticket-period">1 седмица</div>
+          <div class="ticket-price">3,07 <span>€</span></div>
+          <div class="ticket-desc">7 дни валидност</div>
+        </div>
+        <div class="ticket-card">
+          <div class="ticket-period">1 месец</div>
+          <div class="ticket-price">4,09 <span>€</span></div>
+          <div class="ticket-desc">30 дни валидност</div>
+        </div>
+        <div class="ticket-card featured">
+          <div class="ticket-badge">Популярен</div>
+          <div class="ticket-period">6 месеца</div>
+          <div class="ticket-price">7,67 <span>€</span></div>
+          <div class="ticket-desc">Полугодишен абонамент</div>
+        </div>
+        <div class="ticket-card">
+          <div class="ticket-period">1 година</div>
+          <div class="ticket-price">12,78 <span>€</span></div>
+          <div class="ticket-desc">Годишен абонамент</div>
+        </div>
+      </div>
+      <div class="tickets-row hidden" data-type="disabled">
+        <div class="ticket-card free-card">
+          <div class="ticket-period">1 седмица</div>
+          <div class="ticket-price">0 <span>€</span></div>
+          <div class="ticket-desc">Безплатно с ТЕЛК</div>
+        </div>
+        <div class="ticket-card free-card">
+          <div class="ticket-period">1 месец</div>
+          <div class="ticket-price">0 <span>€</span></div>
+          <div class="ticket-desc">Безплатно с ТЕЛК</div>
+        </div>
+        <div class="ticket-card free-card featured">
+          <div class="ticket-badge">Препоръчан</div>
+          <div class="ticket-period">6 месеца</div>
+          <div class="ticket-price">0 <span>€</span></div>
+          <div class="ticket-desc">Безплатно с ТЕЛК</div>
+        </div>
+        <div class="ticket-card free-card">
+          <div class="ticket-period">1 година</div>
+          <div class="ticket-price">0 <span>€</span></div>
+          <div class="ticket-desc">Безплатно с ТЕЛК</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tickets-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span>За инвалиди с валидно ТЕЛК решение – билетът е безплатен. Необходимо е да подадете заявление с номера на решението.</span>
+    </div>
+  </div>
+</section>
+
+<!-- News section -->
+<section class="news-section" id="news">
+  <div class="news-inner">
+    <div class="news-header">
+      <span class="section-tag light">Новини</span>
+      <h2>Последни новини от ИАРА</h2>
+    </div>
+    <div class="news-grid">
+      <a href="https://www.facebook.com/IARABulgaria/" target="_blank" class="news-card">
+        <div class="news-date">
+          <span class="news-day">23</span>
+          <span class="news-month">Юни 2026</span>
+        </div>
+        <div class="news-body">
+          <h3>ИАРА представи дейността си пред студенти от Софийския университет</h3>
+          <p>По време на учебна практика по хидробиология, ИАРА запозна студенти с дейността си.</p>
+        </div>
+        <div class="news-arrow">&rarr;</div>
+      </a>
+      <a href="https://www.facebook.com/IARABulgaria/" target="_blank" class="news-card">
+        <div class="news-date">
+          <span class="news-day">10</span>
+          <span class="news-month">Юни 2026</span>
+        </div>
+        <div class="news-body">
+          <h3>Важно съобщение за собственици на рибовъдни стопанства</h3>
+          <p>Нови изисквания за регистрация и отчитане на аквакултурните обекти.</p>
+        </div>
+        <div class="news-arrow">&rarr;</div>
+      </a>
+      <a href="https://www.facebook.com/IARABulgaria/" target="_blank" class="news-card">
+        <div class="news-date">
+          <span class="news-day">08</span>
+          <span class="news-month">Юни 2026</span>
+        </div>
+        <div class="news-body">
+          <h3>Отмяна на навигационна опасност в Черно море</h3>
+          <p>Възобновяване на нормалния риболовен сезон след период на ограничения.</p>
+        </div>
+        <div class="news-arrow">&rarr;</div>
+      </a>
+      <a href="https://www.facebook.com/IARABulgaria/" target="_blank" class="news-card">
+        <div class="news-date">
+          <span class="news-day">24</span>
+          <span class="news-month">Май 2026</span>
+        </div>
+        <div class="news-body">
+          <h3>Над 5000 метра мрежи иззети от бракониери</h3>
+          <p>През 2026 г. са издадени 124 разрешителни за улов на калкан.</p>
+        </div>
+        <div class="news-arrow">&rarr;</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+
+{% endblock %}
+
+{% block footer %}
+<footer class="site-footer">
+  <div class="footer-wave">
+    <svg viewBox="0 0 1440 100" preserveAspectRatio="none">
+      <path d="M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,100 L0,100 Z" fill="#0b1120"/>
+    </svg>
+  </div>
+  <div class="footer-main">
+    <div class="footer-inner">
+      <div class="footer-col footer-about">
+        <div class="footer-logo">
+          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ИАРА лого">
+          <div>
+            <div class="footer-brand">ИАРА</div>
+            <div class="footer-sub">Изпълнителна агенция по рибарство и аквакултури</div>
+          </div>
+        </div>
+        <p class="footer-desc">Дигитална платформа за управление на рибарството и аквакултурите в Република България.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-head">Контакти</div>
+        <div class="footer-link">гр. Бургас, ул. &bdquo;Княз Александър Батенберг&ldquo; № 1</div>
+        <div class="footer-link">Тел: 056/ 87 60 60</div>
+        <div class="footer-link">Email: office@iara.government.bg</div>
+      </div>
+      <div class="footer-col">
+        <div class="footer-head">Връзки</div>
+        <a class="footer-link" href="http://iara.government.bg">iara.government.bg</a>
+        <a class="footer-link" href="http://www.mzh.government.bg">Министерство на земеделието</a>
+        <a class="footer-link" href="https://www.bfsa.bg">БАБХ</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">Copyright &copy; 2026 Изпълнителна агенция по рибарство и аквакултури. Всички права запазени.</div>
+    </div>
+  </div>
+</footer>
 {% endblock %}

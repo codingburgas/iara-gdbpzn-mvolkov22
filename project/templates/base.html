@@ -7,14 +7,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body class="loaded">
 
-<nav>
-    <a href="{{ url_for('index') }}" class="nav-brand">
+<nav class="nav-transparent">
+    <a href="{{ url_for('index') }}" class="nav-brand-centered">
         <div class="nav-brand-icon">
             <img src="{{ url_for('static', filename='images/logo.png') }}" alt="logo IARA">
         </div>
-        <div>
+        <div class="nav-text-wrapper">
             <div class="nav-brand-text">ИАРА</div>
             <div class="nav-brand-sub">Рибарство и Аквакултури</div>
         </div>
@@ -68,10 +68,52 @@
     {% block content %}{% endblock %}
 </main>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var nav = document.querySelector('.nav-transparent');
+        var hero = document.getElementById('hero');
+
+        if (!hero) {
+            nav.classList.add('nav-scrolled');
+            return;
+        }
+
+        function updateNav() {
+            if (window.scrollY > 80) {
+                nav.classList.add('nav-scrolled');
+            } else {
+                nav.classList.remove('nav-scrolled');
+            }
+        }
+
+        updateNav();
+        window.addEventListener('scroll', updateNav, { passive: true });
+    });
+</script>
+
+{% block footer %}
 <footer>
-    <span>Copyright © 2026 Изпълнителна агенция по рибарство и аквакултури.</span>
-    <span><a href="http://iara.government.bg">iara.government.bg</a></span>
+    <div class="footer-inner">
+        <div class="footer-col">
+            <div class="footer-brand">ИАРА</div>
+            <div class="footer-sub">Изпълнителна агенция по рибарство и аквакултури</div>
+            <div class="footer-copy">Copyright &copy; 2026. Всички права запазени.</div>
+        </div>
+        <div class="footer-col">
+            <div class="footer-head">Контакти</div>
+            <div class="footer-link">гр. София 1000, бул. &bdquo;Мария Луиза&ldquo; 22</div>
+            <div class="footer-link">Тел: 02/ 932 66 66</div>
+            <div class="footer-link">Email: info@iara.government.bg</div>
+        </div>
+        <div class="footer-col">
+            <div class="footer-head">Връзки</div>
+            <a class="footer-link" href="http://iara.government.bg">iara.government.bg</a>
+            <a class="footer-link" href="http://www.mzh.government.bg">Министерство на земеделието</a>
+            <a class="footer-link" href="https://www.bfsa.bg">БАБХ</a>
+        </div>
+    </div>
 </footer>
+{% endblock %}
 
 
 <script>

@@ -8,7 +8,6 @@
   margin: 0 auto;
 }
 
-/* Cards */
 .card {
   background: white;
   border: 1px solid #e5e7eb;
@@ -18,8 +17,9 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
-/* Route timeline */
-.route { padding-left: 1rem; }
+.route { 
+  padding-left: 1rem;
+ }
 
 .stop {
   display: flex;
@@ -98,7 +98,6 @@
 
 .leg-date { font-weight: 400; color: #9ca3af; font-size: 0.72rem; }
 
-/* Search bar inline in trace index */
 .search-inline {
   display: flex;
   gap: 0.5rem;
@@ -117,13 +116,13 @@
   box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
 }
 
-/* Batch row in forms */
 .batch-row {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
   align-items: center;
 }
+
 .batch-row input {
   flex: 1;
   padding: 0.6rem 1rem;
@@ -133,6 +132,7 @@
   font-family: inherit;
   outline: none;
 }
+
 .batch-row input:focus {
   border-color: #06b6d4;
   box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
@@ -160,13 +160,13 @@
   margin-top: 0.35rem;
 }
 
-/* Nav cards for index page */
 .nav-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
   margin: 1.5rem 0;
 }
+
 .nav-grid a {
   display: block;
   background: white;
@@ -177,10 +177,12 @@
   color: inherit;
   transition: all 0.15s;
 }
+
 .nav-grid a:hover {
   border-color: #0e7490;
   box-shadow: 0 4px 12px rgba(14, 116, 144, 0.1);
 }
+
 .nav-grid .title {
   font-weight: 700;
   font-size: 1rem;
@@ -193,4 +195,7 @@
   line-height: 1.5;
 }
 
-.inline-form { margin: 0; display: inline; }
+.inline-form { 
+  margin: 0; 
+  display: inline; 
+}
