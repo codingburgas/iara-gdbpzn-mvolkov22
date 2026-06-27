@@ -56,6 +56,10 @@
             {% if recent_fines %}<span class="tab-badge">{{ recent_fines|length }}</span>{% endif %}
         </button>
         <button class="tab" onclick="showTab('acts', this)">Актове</button>
+        <button class="tab" onclick="showTab('tickets', this)">
+            Билети
+            {% if stats.tickets_active %}<span class="tab-badge">{{ stats.tickets_active }}</span>{% endif %}
+        </button>
         <button class="tab" onclick="showTab('logs', this)">Логове</button>
         <button class="tab" onclick="showTab('trace', this)">Проследяване</button>
     </div>
@@ -403,6 +407,69 @@
         </table>
         {% else %}
         <div class="empty-state">Няма актове за проверка</div>
+        {% endif %}
+    </div>
+
+    <!-- Tickets tab -->
+    <div id="tab-tickets" class="tab-content hidden">
+        <div class="filter-bar">
+            <span class="filter-label">Филтри:</span>
+            <a href="{{ url_for('adminBp.index', ticket_filter='all') }}" class="filter-btn {% if ticket_filter == 'all' %}active{% endif %}">Всички ({{ stats.tickets }})</a>
+            <a href="{{ url_for('adminBp.index', ticket_filter='pending') }}" class="filter-btn {% if ticket_filter == 'pending' %}active{% endif %}">Чакащи ({{ stats.tickets_pending }})</a>
+            <a href="{{ url_for('adminBp.index', ticket_filter='active') }}" class="filter-btn {% if ticket_filter == 'active' %}active{% endif %}">Активни ({{ stats.tickets_active }})</a>
+            <a href="{{ url_for('adminBp.index', ticket_filter='expired') }}" class="filter-btn {% if ticket_filter == 'expired' %}active{% endif %}">Изтекли ({{ stats.tickets_expired }})</a>
+            <a href="{{ url_for('adminBp.index', ticket_filter='cancelled') }}" class="filter-btn {% if ticket_filter == 'cancelled' %}active{% endif %}">Анулирани</a>
+        </div>
+        {% if tickets %}
+        <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Номер</th>
+                    <th>Купувач</th>
+                    <th>Вид</th>
+                    <th>Период</th>
+                    <th>Цена</th>
+                    <th>Валиден от</th>
+                    <th>Валиден до</th>
+                    <th>Статус</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ticket in tickets %}
+                {% set ttype_label = 'Стандартен' if ticket.ticket_type == 'standard' else 'Намален' if ticket.ticket_type == 'reduced' else 'Инвалид' %}
+                {% set tstatus_label = {'active': 'Активен', 'expired': 'Изтекъл', 'cancelled': 'Анулиран', 'pending': 'Чака одобрение'}[ticket.status] %}
+                {% set tbadge = {'active': 'badge-approved', 'expired': 'badge-pending', 'cancelled': 'badge-rejected', 'pending': 'badge-pending'}[ticket.status] %}
+                <tr>
+                    <td><strong>{{ ticket.receipt_number }}</strong></td>
+                    <td>{{ ticket.user.full_name }}</td>
+                    <td>{{ ttype_label }}</td>
+                    <td>{{ ticket.period }}</td>
+                    <td>{{ '%.2f'|format(ticket.price) }} EUR</td>
+                    <td>{{ ticket.valid_from.strftime('%d.%m.%Y') if ticket.valid_from else '—' }}</td>
+                    <td>{{ ticket.valid_until.strftime('%d.%m.%Y') if ticket.valid_until else '—' }}</td>
+                    <td><span class="badge {{ tbadge }}">{{ tstatus_label }}</span></td>
+                    <td class="actions-cell">
+                        <a href="{{ url_for('ticket_receipt', ticket_id=ticket.id) }}" class="btn-action btn-approve">Чек</a>
+                        {% if ticket.status == 'pending' %}
+                        <form method="POST" action="{{ url_for('approve_ticket', ticket_id=ticket.id) }}" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-action btn-approve">Одобри</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('reject_ticket', ticket_id=ticket.id) }}" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-action btn-reject" onclick="return confirm('Отхвърляне на заявлението?')">Отхвърли</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <div class="empty-state">Няма билети</div>
         {% endif %}
     </div>
 

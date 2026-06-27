@@ -401,8 +401,8 @@
 }
 
 .readonly-input {
-    background: #f9fafb !important;
-    color: #6b7280 !important;
+    background: #f9fafb;
+    color: #6b7280;
     cursor: not-allowed;
 }
 

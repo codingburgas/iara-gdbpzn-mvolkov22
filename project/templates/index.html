@@ -212,93 +212,150 @@
 <!-- Tickets section -->
 <section class="tickets-section">
   <div class="tickets-inner">
-    <div class="tickets-header">
-      <span class="section-tag">Билети</span>
-      <h2>Билет за любителски риболов</h2>
-      <p>Закупете билет онлайн. Цените зависят от срока на валидност и възрастта. За инвалиди с ТЕЛК – безплатно.</p>
+    <div class="tickets-left">
+      <div class="tickets-left-image">
+        <img src="{{ url_for('static', filename='images/tickets-1.png') }}" alt="Риболов" onerror="this.style.display='none'">
+      </div>
+      <div class="tickets-left-quote">
+        Закупете билет онлайн
+      </div>
     </div>
+    <div class="tickets-right">
+      <div class="tickets-header">
+        <h2>Билет за любителски риболов</h2>
+        <p>Цените зависят от срока на валидност и възрастта. За инвалиди с ТЕЛК &mdash; безплатно.</p>
+      </div>
 
-    <div class="tickets-tabs">
-      <button class="ticket-tab active" data-tab="standard">Стандартен</button>
-      <button class="ticket-tab" data-tab="reduced">Намален (над 14г / пенсионер)</button>
-      <button class="ticket-tab" data-tab="disabled">Инвалид (ТЕЛК)</button>
-    </div>
+      <div class="tickets-tabs">
+        <button class="ticket-tab active" data-tab="standard">Стандартен</button>
+        <button class="ticket-tab" data-tab="reduced">Намален (над 14г / пенсионер)</button>
+        <button class="ticket-tab" data-tab="disabled">Инвалид (ТЕЛК)</button>
+      </div>
 
-    <div class="tickets-grid" id="ticketsGrid">
-      <div class="tickets-row" data-type="standard">
-        <div class="ticket-card">
+      <div class="tickets-grid" id="ticketsGrid">
+        <div class="tickets-row" data-type="standard">
+        <div class="ticket-card" data-type="standard" data-period="1 седмица">
+          <div class="ticket-card-icon standard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
           <div class="ticket-period">1 седмица</div>
           <div class="ticket-price">6,14 <span>€</span></div>
-          <div class="ticket-desc">7 дни валидност</div>
+          <div class="ticket-days">7 дни валидност</div>
+          <button class="ticket-buy-btn">Купи <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
         </div>
-        <div class="ticket-card">
+        <div class="ticket-card" data-type="standard" data-period="1 месец">
+          <div class="ticket-card-icon standard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          </div>
           <div class="ticket-period">1 месец</div>
           <div class="ticket-price">8,18 <span>€</span></div>
-          <div class="ticket-desc">30 дни валидност</div>
+          <div class="ticket-days">30 дни валидност</div>
+          <button class="ticket-buy-btn">Купи <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
         </div>
-        <div class="ticket-card featured">
+        <div class="ticket-card featured" data-type="standard" data-period="6 месеца">
           <div class="ticket-badge">Популярен</div>
+          <div class="ticket-card-icon standard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M12 2l2.4 7.2H22l-6.4 4.8 2.4 7.2L12 16.8 6 21.2l2.4-7.2L2 9.2h7.6z"/></svg>
+          </div>
           <div class="ticket-period">6 месеца</div>
           <div class="ticket-price">15,34 <span>€</span></div>
-          <div class="ticket-desc">Полугодишен абонамент</div>
+          <div class="ticket-days">Полугодишен абонамент</div>
+          <button class="ticket-buy-btn">Купи <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
         </div>
-        <div class="ticket-card">
+        <div class="ticket-card" data-type="standard" data-period="1 година">
+          <div class="ticket-card-icon standard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
           <div class="ticket-period">1 година</div>
           <div class="ticket-price">25,56 <span>€</span></div>
-          <div class="ticket-desc">Годишен абонамент</div>
+          <div class="ticket-days">Годишен абонамент</div>
+          <button class="ticket-buy-btn">Купи <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
         </div>
-      </div>
+        </div>
       <div class="tickets-row hidden" data-type="reduced">
-        <div class="ticket-card">
+        <div class="ticket-card" data-type="reduced" data-period="1 седмица">
+          <div class="ticket-card-icon reduced">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
           <div class="ticket-period">1 седмица</div>
           <div class="ticket-price">3,07 <span>€</span></div>
-          <div class="ticket-desc">7 дни валидност</div>
+          <div class="ticket-days">7 дни валидност</div>
+          <button class="ticket-buy-btn">Купи <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
         </div>
-        <div class="ticket-card">
+        <div class="ticket-card" data-type="reduced" data-period="1 месец">
+          <div class="ticket-card-icon reduced">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          </div>
           <div class="ticket-period">1 месец</div>
           <div class="ticket-price">4,09 <span>€</span></div>
-          <div class="ticket-desc">30 дни валидност</div>
+          <div class="ticket-days">30 дни валидност</div>
+          <button class="ticket-buy-btn">Купи <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
         </div>
-        <div class="ticket-card featured">
+        <div class="ticket-card featured" data-type="reduced" data-period="6 месеца">
           <div class="ticket-badge">Популярен</div>
+          <div class="ticket-card-icon reduced">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M12 2l2.4 7.2H22l-6.4 4.8 2.4 7.2L12 16.8 6 21.2l2.4-7.2L2 9.2h7.6z"/></svg>
+          </div>
           <div class="ticket-period">6 месеца</div>
           <div class="ticket-price">7,67 <span>€</span></div>
-          <div class="ticket-desc">Полугодишен абонамент</div>
+          <div class="ticket-days">Полугодишен абонамент</div>
+          <button class="ticket-buy-btn">Купи <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
         </div>
-        <div class="ticket-card">
+        <div class="ticket-card" data-type="reduced" data-period="1 година">
+          <div class="ticket-card-icon reduced">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
           <div class="ticket-period">1 година</div>
           <div class="ticket-price">12,78 <span>€</span></div>
-          <div class="ticket-desc">Годишен абонамент</div>
+          <div class="ticket-days">Годишен абонамент</div>
+          <button class="ticket-buy-btn">Купи <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
         </div>
       </div>
       <div class="tickets-row hidden" data-type="disabled">
-        <div class="ticket-card free-card">
+        <div class="ticket-card free-card" data-type="disabled" data-period="1 седмица">
+          <div class="ticket-card-icon free">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
           <div class="ticket-period">1 седмица</div>
           <div class="ticket-price">0 <span>€</span></div>
-          <div class="ticket-desc">Безплатно с ТЕЛК</div>
+          <div class="ticket-days">Безплатно с ТЕЛК</div>
+          <button class="ticket-buy-btn">Заяви <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
         </div>
-        <div class="ticket-card free-card">
+        <div class="ticket-card free-card" data-type="disabled" data-period="1 месец">
+          <div class="ticket-card-icon free">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          </div>
           <div class="ticket-period">1 месец</div>
           <div class="ticket-price">0 <span>€</span></div>
-          <div class="ticket-desc">Безплатно с ТЕЛК</div>
+          <div class="ticket-days">Безплатно с ТЕЛК</div>
+          <button class="ticket-buy-btn">Заяви <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
         </div>
-        <div class="ticket-card free-card featured">
+        <div class="ticket-card free-card featured" data-type="disabled" data-period="6 месеца">
           <div class="ticket-badge">Препоръчан</div>
+          <div class="ticket-card-icon free">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path d="M12 2l2.4 7.2H22l-6.4 4.8 2.4 7.2L12 16.8 6 21.2l2.4-7.2L2 9.2h7.6z"/></svg>
+          </div>
           <div class="ticket-period">6 месеца</div>
           <div class="ticket-price">0 <span>€</span></div>
-          <div class="ticket-desc">Безплатно с ТЕЛК</div>
+          <div class="ticket-days">Безплатно с ТЕЛК</div>
+          <button class="ticket-buy-btn">Заяви <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
         </div>
-        <div class="ticket-card free-card">
+        <div class="ticket-card free-card" data-type="disabled" data-period="1 година">
+          <div class="ticket-card-icon free">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
           <div class="ticket-period">1 година</div>
           <div class="ticket-price">0 <span>€</span></div>
-          <div class="ticket-desc">Безплатно с ТЕЛК</div>
+          <div class="ticket-days">Безплатно с ТЕЛК</div>
+          <button class="ticket-buy-btn">Заяви <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
         </div>
       </div>
-    </div>
+      </div>
 
-    <div class="tickets-note">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <span>За инвалиди с валидно ТЕЛК решение – билетът е безплатен. Необходимо е да подадете заявление с номера на решението.</span>
+      <div class="tickets-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="18" height="18"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>За инвалиди с валидно ТЕЛК решение &mdash; билетът е безплатен. Необходимо е да подадете заявление с номера на решението.</span>
+      </div>
     </div>
   </div>
 </section>
@@ -358,6 +415,43 @@
     </div>
   </div>
 </section>
+
+<div class="modal-overlay" id="ticketModal" style="display:none"
+     data-login-url="{{ url_for('auth.login') }}"
+     data-user="{{ 'true' if user else 'false' }}">
+  <div class="modal-content">
+    <button class="modal-close" id="modalCloseBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="modal-icon-wrap" id="modalIconWrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+    </div>
+    <h3 id="modalTitle">Потвърдете покупката</h3>
+    <p id="modalDesc" class="modal-desc"></p>
+    <div class="modal-price-box" id="modalPriceBox">
+      <span class="modal-price-label">Сума за плащане</span>
+      <span class="modal-price-amount" id="modalPriceAmount">6,14 EUR</span>
+    </div>
+    <div id="modalBody">
+      <form id="ticketForm" method="POST" action="{{ url_for('buy_ticket') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="ticket_type" id="modalTicketType">
+        <input type="hidden" name="period" id="modalPeriod">
+        <div id="telkField" style="display:none">
+          <label for="telk_number" class="modal-field-label">Номер на ТЕЛК решение</label>
+          <input type="text" name="telk_number" id="telk_number" class="form-input" placeholder="Пример: 1234/2020">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="modal-btn modal-btn-secondary" id="modalCancelBtn">Отказ</button>
+          <button type="submit" class="modal-btn modal-btn-primary" id="confirmBuyBtn">
+            <span class="modal-btn-text">Потвърди и плати</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 <script src="{{ url_for('static', filename='js/index.js') }}"></script>
 

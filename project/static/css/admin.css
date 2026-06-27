@@ -317,12 +317,6 @@ select:focus {
     box-shadow: 0 6px 16px rgba(14,116,144,0.18);
 }
 
-@media (max-width: 720px) {
-    .tab-content .filter-bar {
-        justify-content: flex-start;
-    }
-}
-
 .tab-content table {
     margin: 0;
     box-shadow: none;

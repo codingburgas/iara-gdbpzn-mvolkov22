@@ -221,3 +221,25 @@ class BatchMovement(db.Model):
     from_location = db.relationship('TraceLocation', foreign_keys=[from_location_id], back_populates='outgoing_movements')
     to_location = db.relationship('TraceLocation', foreign_keys=[to_location_id], back_populates='incoming_movements')
     creator = db.relationship('UserModel', foreign_keys=[created_by])
+
+
+class FishingTicket(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user_model.id'), nullable=False)
+
+    ticket_type = db.Column(db.Enum('standard', 'reduced', 'disabled'), nullable=False)
+    period = db.Column(db.String(30), nullable=False)
+    price = db.Column(db.Float, nullable=False, default=0)
+    currency = db.Column(db.String(3), default='EUR')
+
+    receipt_number = db.Column(db.String(30), unique=True, nullable=False)
+    telk_number = db.Column(db.String(50))
+
+    valid_from = db.Column(db.Date, nullable=False)
+    valid_until = db.Column(db.Date, nullable=False)
+    status = db.Column(db.Enum('active', 'expired', 'cancelled', 'pending'), default='active', nullable=False)
+
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    paid_at = db.Column(db.DateTime, default=db.func.now())
+
+    user = db.relationship('UserModel', foreign_keys=[user_id])

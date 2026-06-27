@@ -134,3 +134,64 @@
   }, { threshold: 0.1 });
   els.forEach(function(el) { obs.observe(el); });
 })();
+
+(function(){
+  var modal = document.getElementById('ticketModal');
+  if (!modal) return;
+
+  var isLoggedIn = modal.dataset.user === 'true';
+  var loginUrl = modal.dataset.loginUrl;
+
+  var prices = {
+    'standard-1 седмица': {label: '6,14', val: '6.14'}, 'standard-1 месец': {label: '8,18', val: '8.18'}, 'standard-6 месеца': {label: '15,34', val: '15.34'}, 'standard-1 година': {label: '25,56', val: '25.56'},
+    'reduced-1 седмица': {label: '3,07', val: '3.07'}, 'reduced-1 месец': {label: '4,09', val: '4.09'}, 'reduced-6 месеца': {label: '7,67', val: '7.67'}, 'reduced-1 година': {label: '12,78', val: '12.78'},
+  };
+  var typeLabels = {standard: 'Стандартен', reduced: 'Намален', disabled: 'Инвалид'};
+  var periodLabels = {'1 седмица': '7 дни', '1 месец': '30 дни', '6 месеца': '180 дни', '1 година': '365 дни'};
+
+  document.querySelectorAll('.ticket-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      var type = this.dataset.type;
+      var period = this.dataset.period;
+      if (!type || !period) return;
+      if (type === 'disabled') {
+        openModalDisabled(period);
+      } else {
+        openModal(type, period);
+      }
+    });
+  });
+
+  function openModal(type, period) {
+    if (!isLoggedIn) { window.location.href = loginUrl; return; }
+    document.getElementById('modalTitle').textContent = 'Потвърдете покупката';
+    document.getElementById('modalDesc').textContent = typeLabels[type] + ' билет \u2014 ' + period + ' (' + periodLabels[period] + ')';
+    document.getElementById('modalPriceBox').style.display = 'flex';
+    document.getElementById('modalPriceAmount').textContent = prices[type + '-' + period].label + ' EUR';
+    document.getElementById('modalTicketType').value = type;
+    document.getElementById('modalPeriod').value = period;
+    document.getElementById('telkField').style.display = 'none';
+    document.getElementById('confirmBuyBtn').innerHTML = '<span class="modal-btn-text">Потвърди и плати</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+    document.getElementById('ticketModal').style.display = 'flex';
+  }
+
+  function openModalDisabled(period) {
+    if (!isLoggedIn) { window.location.href = loginUrl; return; }
+    document.getElementById('modalTitle').textContent = 'Заявление за безплатен билет';
+    document.getElementById('modalDesc').textContent = 'Безплатен билет за инвалиди \u2014 ' + period + ' (' + periodLabels[period] + ')';
+    document.getElementById('modalPriceBox').style.display = 'flex';
+    document.getElementById('modalPriceAmount').textContent = '0,00 EUR';
+    document.getElementById('modalTicketType').value = 'disabled';
+    document.getElementById('modalPeriod').value = period;
+    document.getElementById('telkField').style.display = 'block';
+    document.getElementById('confirmBuyBtn').innerHTML = '<span class="modal-btn-text">Подай заявление</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+    document.getElementById('ticketModal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('ticketModal').style.display = 'none';
+  }
+
+  document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+  document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
+})();

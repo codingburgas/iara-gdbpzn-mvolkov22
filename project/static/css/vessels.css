@@ -222,12 +222,3 @@
     background: linear-gradient(135deg, #0d6779, #059bc4);
     box-shadow: 0 4px 6px rgba(14, 116, 144, 0.2);
 }
-
-@media (max-width: 720px) {
-    .detail-grid {
-        grid-template-columns: 1fr;
-    }
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-}

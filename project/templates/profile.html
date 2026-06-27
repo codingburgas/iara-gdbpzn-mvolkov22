@@ -109,6 +109,56 @@
         {% endif %}
     </div>
 
+    <div class="profile-section" id="tickets">
+        <div class="section-header">
+            <h2>Моите билети за риболов ({{ tickets|length }})</h2>
+            <a href="{{ url_for('index') }}#ticketsGrid" class="btn-action btn-approve">Купи нов билет</a>
+        </div>
+        {% if tickets %}
+        <div class="table-wrapper"><table>
+            <thead>
+                <tr>
+                    <th>Номер</th>
+                    <th>Вид</th>
+                    <th>Период</th>
+                    <th>Цена</th>
+                    <th>Валиден от</th>
+                    <th>Валиден до</th>
+                    <th>Статус</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ticket in tickets %}
+                {% set ttype_label = 'Стандартен' if ticket.ticket_type == 'standard' else 'Намален' if ticket.ticket_type == 'reduced' else 'Инвалид' %}
+                {% set tstatus_label = {'active': 'Активен', 'expired': 'Изтекъл', 'cancelled': 'Анулиран', 'pending': 'Чака одобрение'}[ticket.status] %}
+                {% set tstatus_class = {'active': 'approved', 'expired': 'expired', 'cancelled': 'rejected', 'pending': 'pending'}[ticket.status] %}
+                <tr>
+                    <td><strong>{{ ticket.receipt_number }}</strong></td>
+                    <td>{{ ttype_label }}</td>
+                    <td>{{ ticket.period }}</td>
+                    <td><strong>{{ '%.2f'|format(ticket.price) }} EUR</strong></td>
+                    <td>{{ ticket.valid_from.strftime('%d.%m.%Y') if ticket.valid_from else '—' }}</td>
+                    <td>{{ ticket.valid_until.strftime('%d.%m.%Y') if ticket.valid_until else '—' }}</td>
+                    <td><span class="badge badge-{{ tstatus_class }}">{{ tstatus_label }}</span></td>
+                    <td>
+                        <a href="{{ url_for('ticket_receipt', ticket_id=ticket.id) }}" class="btn-link">Чек</a>
+                        {% if ticket.status in ('active', 'pending') %}
+                        <form method="POST" action="{{ url_for('cancel_ticket', ticket_id=ticket.id) }}" style="display:inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn-link" style="color:#dc2626;border:none;background:none;cursor:pointer;padding:0;font-size:inherit" onclick="return confirm('Анулиране на билет {{ ticket.receipt_number }}?')">Анулирай</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table></div>
+        {% else %}
+        <div class="empty-state">Нямате закупени билети.</div>
+        {% endif %}
+    </div>
+
     <div class="profile-section">
         <div class="section-header">
             <h2>Глоби по корабите ({{ fines|length }})</h2>

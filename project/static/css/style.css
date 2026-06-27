@@ -8,7 +8,7 @@
 
 body {
     font-family: Arial, sans-serif;
-    background-color: #f0f4f8;
+    background: #fff;
     color: #333;
     margin: 0;
     padding: 0;
@@ -87,62 +87,62 @@ body {
 }
 
 .nav-transparent .btn-logout {
-    color: #ff6b6b !important;
-    border-color: rgba(255, 107, 107, 0.4) !important;
-    background: transparent !important;
+    color: #ff6b6b;
+    border-color: rgba(255, 107, 107, 0.4);
+    background: transparent;
 }
 
 .nav-transparent .btn-logout:hover {
-    background: rgba(255, 107, 107, 0.15) !important;
+    background: rgba(255, 107, 107, 0.15);
 }
 
 .nav-scrolled {
-    background: rgba(255, 255, 255, 0.97) !important;
+    background: rgba(255, 255, 255, 0.97);
     backdrop-filter: blur(12px);
     box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
     padding: 0.75rem 2rem;
 }
 
 .nav-scrolled .nav-brand-text {
-    color: #0e7490 !important;
-    background: linear-gradient(135deg, #0e7490, #06b6d4) !important;
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    background-clip: text !important;
+    color: #0e7490;
+    background: linear-gradient(135deg, #0e7490, #06b6d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .nav-scrolled .nav-brand-sub {
-    color: #64748b !important;
+    color: #64748b;
 }
 
 .nav-scrolled .nav-links a {
-    color: #334155 !important;
-    background: transparent !important;
+    color: #334155;
+    background: transparent;
 }
 
 .nav-scrolled .nav-links a:hover {
-    color: #0e7490 !important;
-    background: rgba(14, 116, 144, 0.06) !important;
+    color: #0e7490;
+    background: rgba(14, 116, 144, 0.06);
 }
 
 .nav-scrolled .nav-user a {
-    color: #334155 !important;
-    background: rgba(14, 116, 144, 0.06) !important;
+    color: #334155;
+    background: rgba(14, 116, 144, 0.06);
 }
 
 .nav-scrolled .nav-user a:hover {
-    background: rgba(14, 116, 144, 0.12) !important;
-    color: #0e7490 !important;
+    background: rgba(14, 116, 144, 0.12);
+    color: #0e7490;
 }
 
 .nav-scrolled .btn-logout {
-    color: #ef4444 !important;
-    border: 1px solid rgba(239, 68, 68, 0.2) !important;
-    background: transparent !important;
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    background: transparent;
 }
 
 .nav-scrolled .btn-logout:hover {
-    background: rgba(239, 68, 68, 0.06) !important;
+    background: rgba(239, 68, 68, 0.06);
 }
 
 .nav-brand-centered {
@@ -261,14 +261,14 @@ body {
 }
 
 .btn-logout {
-    color: #ef4444 !important;
-    border: 1px solid rgba(239, 68, 68, 0.2) !important;
-    background: transparent !important;
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    background: transparent;
 }
 
 .btn-logout:hover {
-    background: rgba(239, 68, 68, 0.05) !important;
-    border-color: rgba(239, 68, 68, 0.4) !important;
+    background: rgba(239, 68, 68, 0.05);
+    border-color: rgba(239, 68, 68, 0.4);
 }
 
 nav {
@@ -352,8 +352,8 @@ nav a.active {
 }
 
 main {
-    padding: 20px;
-    flex: 1; 
+    padding: 80px 20px 20px;
+    flex: 1;
 }
 
 footer {
@@ -373,9 +373,7 @@ footer {
     align-items: start;
 }
 
-@media (max-width: 700px) {
-    .footer-inner { grid-template-columns: 1fr; gap: 1.5rem; }
-}
+
 
 .footer-brand {
     font-size: 1.2rem;

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}ИАРА — Касов бон {{ ticket.receipt_number }}{% endblock %}
+
+{% block extra_css %}
+<link href="{{ url_for('static', filename='css/receipt.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="receipt-wrap">
+  <div class="receipt-card" id="receiptContent">
+    <div class="receipt-header">
+      <div class="receipt-logo">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ИАРА">
+        <div>
+          <div class="receipt-brand">ИАРА</div>
+          <div class="receipt-brand-sub">Изпълнителна агенция по рибарство и аквакултури</div>
+        </div>
+      </div>
+      <div class="receipt-title">КАСОВА РАЗПИСКА / ЧЕК</div>
+    </div>
+
+    <div class="receipt-body">
+      <div class="receipt-row">
+        <span class="receipt-label">Номер на билет</span>
+        <span class="receipt-value">{{ ticket.receipt_number }}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Вид билет</span>
+        <span class="receipt-value">
+          {% if ticket.ticket_type == 'standard' %}Стандартен
+          {% elif ticket.ticket_type == 'reduced' %}Намален (над 14г / пенсионер)
+          {% else %}Инвалид (безплатен с ТЕЛК){% endif %}
+        </span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Период</span>
+        <span class="receipt-value">{{ ticket.period }}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Цена</span>
+        <span class="receipt-value">{{ '%.2f'|format(ticket.price) }} EUR</span>
+      </div>
+      {% if ticket.telk_number %}
+      <div class="receipt-row">
+        <span class="receipt-label">ТЕЛК решение</span>
+        <span class="receipt-value">{{ ticket.telk_number }}</span>
+      </div>
+      {% endif %}
+      <div class="receipt-row">
+        <span class="receipt-label">Валиден от</span>
+        <span class="receipt-value">{{ ticket.valid_from.strftime('%d.%m.%Y') if ticket.valid_from else '—' }}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Валиден до</span>
+        <span class="receipt-value">{{ ticket.valid_until.strftime('%d.%m.%Y') if ticket.valid_until else '—' }}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Статус</span>
+        <span class="receipt-value">
+          <span class="badge badge-{{ {'active': 'approved', 'expired': 'pending', 'cancelled': 'rejected', 'pending': 'pending'}[ticket.status] }}">{{ {'active': 'Активен', 'expired': 'Изтекъл', 'cancelled': 'Анулиран', 'pending': 'Чака одобрение'}[ticket.status] }}</span>
+        </span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Закупен на</span>
+        <span class="receipt-value">{{ ticket.paid_at.strftime('%d.%m.%Y %H:%M') if ticket.paid_at else ticket.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">Купувач</span>
+        <span class="receipt-value">{{ ticket.user.full_name }}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="receipt-label">ЕГН/ЕИК</span>
+        <span class="receipt-value">{{ ticket.user.identifier }}</span>
+      </div>
+    </div>
+
+    <div class="receipt-footer">
+      <div class="receipt-stamp">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40">
+          <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+        </svg>
+        <span>ПЛАТЕНО</span>
+      </div>
+      <p>Този документ е валидно доказателство за закупен билет за любителски риболов.</p>
+    </div>
+  </div>
+
+  <div class="receipt-actions">
+    <a href="{{ url_for('profile') }}" class="btn btn-back">Назад към профила</a>
+    <button class="btn btn-pay" onclick="printReceipt()">Принтирай / Запази като PDF</button>
+  </div>
+</div>
+
+<script>
+function printReceipt() {
+  var actions = document.querySelector('.receipt-actions');
+  actions.style.display = 'none';
+  window.print();
+  setTimeout(function() { actions.style.display = 'flex'; }, 500);
+}
+</script>
+{% endblock %}
