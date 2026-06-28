@@ -105,7 +105,7 @@
           current = target;
           clearInterval(timer);
         }
-        el.textContent = current.toLocaleString('bg-BG') + '+';
+        el.textContent = current.toLocaleString('bg-BG');
       }, 30);
     });
   }

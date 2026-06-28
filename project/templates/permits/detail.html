@@ -92,17 +92,17 @@
     {% endif %}
 
     {% if user.role == 'admin' and permit.status == 'pending' %}
-    <div class="form-actions" style="margin-top:1rem">
-        <form method="POST" action="{{ url_for('permitsBp.approve_permit', permit_id=permit.id) }}" style="display:inline">
+    <div class="form-actions">
+        <form method="POST" action="{{ url_for('permitsBp.approve_permit', permit_id=permit.id) }}" class="inline-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-primary"
                     onclick="return confirm('Одобри разрешително {{ permit.permit_number }}?')">
                 Одобри
             </button>
         </form>
-        <form method="POST" action="{{ url_for('permitsBp.reject_permit', permit_id=permit.id) }}" style="display:inline">
+        <form method="POST" action="{{ url_for('permitsBp.reject_permit', permit_id=permit.id) }}" class="inline-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="text" name="reason" placeholder="Причина за отказ" required style="padding:0.75rem 1rem;border:1px solid #e5e7eb;border-radius:6px;font-size:0.875rem;font-family:inherit;margin-right:0.5rem">
+            <input type="text" name="reason" placeholder="Причина за отказ" required class="reject-reason-input">
             <button type="submit" class="btn-action btn-reject"
                     onclick="return confirm('Отхвърли разрешително {{ permit.permit_number }}?')">
                 Отхвърли
@@ -112,13 +112,13 @@
     {% endif %}
 
     {% if user.role == 'admin' and permit.status in ('active', 'pending') %}
-    <div class="form-actions" style="margin-top:0.5rem">
+    <div class="form-actions">
         <a href="{{ url_for('permitsBp.edit_permit', permit_id=permit.id) }}" class="btn-action btn-approve">Редактирай</a>
     </div>
     {% endif %}
 
     {% if user.role == 'admin' and permit.status == 'active' %}
-    <div class="card card-alert" style="margin-top:1rem">
+    <div class="card card-alert">
         <div class="detail-section-title danger">Отнемане на разрешително</div>
         <form method="POST" action="{{ url_for('permitsBp.revoke_permit', permit_id=permit.id) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

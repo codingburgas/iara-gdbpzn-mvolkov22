@@ -14,7 +14,7 @@
         {% endif %}
     </div>
 
-    <form method="GET" class="filter-bar">
+    <form method="GET" class="logbook-filter-bar">
         <select name="status" onchange="this.form.submit()">
             <option value="">Всички статуси</option>
             <option value="draft" {{ 'selected' if current_filter == 'draft' }}>Чернова</option>

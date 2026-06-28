@@ -71,16 +71,16 @@
 
     {% if fine.status == 'pending' %}
     <div class="form-actions">
-        <form method="POST" action="{{ url_for('adminBp.approve_fine', fine_id=fine.id) }}" style="display:inline">
+        <form method="POST" action="{{ url_for('adminBp.approve_fine', fine_id=fine.id) }}" class="inline-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-primary"
                     onclick="return confirm('Одобри глоба {{ fine.fine_number }}?')">
                 Одобри глоба
             </button>
         </form>
-        <form method="POST" action="{{ url_for('adminBp.reject_fine', fine_id=fine.id) }}" style="display:inline">
+        <form method="POST" action="{{ url_for('adminBp.reject_fine', fine_id=fine.id) }}" class="inline-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="text" name="note" placeholder="Причина за отхвърляне" required style="padding:0.75rem 1rem;border:1px solid #e5e7eb;border-radius:6px;font-size:0.875rem;font-family:inherit;margin-right:0.5rem">
+            <input type="text" name="note" placeholder="Причина за отхвърляне" required class="reject-reason-input">
             <button type="submit" class="btn-action btn-reject"
                     onclick="return confirm('Отхвърли глоба {{ fine.fine_number }}?')">
                 Отхвърли
@@ -89,16 +89,16 @@
     </div>
     {% elif fine.status == 'approved' %}
     <div class="form-actions">
-        <form method="POST" action="{{ url_for('adminBp.mark_fine_paid', fine_id=fine.id) }}" style="display:inline">
+        <form method="POST" action="{{ url_for('adminBp.mark_fine_paid', fine_id=fine.id) }}" class="inline-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-primary"
                     onclick="return confirm('Отбележи глоба {{ fine.fine_number }} като платена?')">
                 Отбележи платена
             </button>
         </form>
-        <form method="POST" action="{{ url_for('adminBp.reject_fine', fine_id=fine.id) }}" style="display:inline">
+        <form method="POST" action="{{ url_for('adminBp.reject_fine', fine_id=fine.id) }}" class="inline-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="text" name="note" placeholder="Причина за отхвърляне" required style="padding:0.75rem 1rem;border:1px solid #e5e7eb;border-radius:6px;font-size:0.875rem;font-family:inherit;margin-right:0.5rem">
+            <input type="text" name="note" placeholder="Причина за отхвърляне" required class="reject-reason-input">
             <button type="submit" class="btn-action btn-reject"
                     onclick="return confirm('Отхвърли глоба {{ fine.fine_number }}?')">
                 Отхвърли

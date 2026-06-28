@@ -541,13 +541,68 @@ html {
   transform: translateY(20px);
   transition: all 0.5s ease;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+}
+
+.stat-info {
+  position: absolute;
+  top: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  cursor: help;
+  color: #06b6d4;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+  z-index: 1;
+}
+
+.stat-info:hover,
+.stat-info:focus {
+  opacity: 1;
+}
+
+.stat-info svg {
+  display: block;
+}
+
+.stat-info .stats-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 0.72rem;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.stat-info .stats-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #1e293b;
+}
+
+.stat-info:hover .stats-tooltip,
+.stat-info:focus .stats-tooltip {
+  opacity: 1;
 }
 
 .stat-item.visible { opacity: 1; transform: translateY(0); }
 
 .stat-number {
-  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-size: clamp(1.6rem, 3.5vw, 2.5rem);
   font-weight: 800;
   color: #06b6d4;
   line-height: 1;

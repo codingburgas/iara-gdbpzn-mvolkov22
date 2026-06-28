@@ -1,20 +1,74 @@
 .content-wrap {
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+.trace-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.trace-header h1 {
+  margin: 0;
+}
+
+.trace-subtitle {
+  margin: 0.35rem 0 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.trace-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .form-wrap {
   max-width: 600px;
-  margin: 0 auto;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
 }
 
 .card {
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
-  padding: 1.25rem 1.5rem;
+  padding: 1.5rem;
   margin-bottom: 1.25rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.card table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.card table th,
+.card table td {
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.card table th {
+  background: #f8fafc;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.card table tbody tr:hover {
+  background: #f8fafc;
 }
 
 .route { 
@@ -198,4 +252,74 @@
 .inline-form { 
   margin: 0; 
   display: inline; 
+}
+
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-action.btn-approve {
+  background: #059669;
+  color: white;
+}
+
+.btn-action.btn-approve:hover {
+  background: #047857;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  background: linear-gradient(135deg, #0e7490, #06b6d4);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #0d6779, #059bc4);
+  box-shadow: 0 2px 8px rgba(14, 116, 144, 0.25);
+}
+
+.nav-grid {
+  margin: 0 0 1.5rem 0;
+}
+
+.btn-link {
+  color: #0e7490;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.btn-link:hover {
+  color: #06b6d4;
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .trace-header {
+    flex-direction: column;
+  }
 }

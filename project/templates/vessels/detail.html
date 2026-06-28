@@ -41,7 +41,7 @@
             </div>
         </div>
         {% if vessel.status in ('pending', 'approved', 'suspended') %}
-        <div class="form-actions" style="margin-top:1rem">
+        <div class="form-actions">
             <a href="{{ url_for('vessels.edit_vessel', vessel_id=vessel.id) }}" class="btn-action btn-approve">Редактирай</a>
         </div>
         {% endif %}

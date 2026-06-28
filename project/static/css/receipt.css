@@ -122,9 +122,91 @@
   margin-top: 1.5rem;
 }
 
+.receipt-actions .btn-back {
+  padding: 0.6rem 1.25rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.receipt-actions .btn-back:hover {
+  border-color: #9ca3af;
+  color: #374151;
+  background: #f9fafb;
+}
+
+.receipt-actions .btn-pay {
+  background: linear-gradient(135deg, #0e7490, #06b6d4);
+  color: white;
+  padding: 0.6rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.receipt-actions .btn-pay:hover {
+  box-shadow: 0 4px 12px rgba(14, 116, 144, 0.3);
+}
+
 @media print {
-  nav, footer, .flashes, .receipt-actions { display: none; }
-  .receipt-wrap { margin: 0; padding: 0; }
-  .receipt-card { border: none; border-radius: 0; box-shadow: none; }
-  body { background: #fff; }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  nav, footer, .flashes, .receipt-actions {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .receipt-wrap {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  .receipt-card {
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    width: 100% !important;
+  }
+
+  .receipt-header {
+    background: #0f172a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .receipt-stamp {
+    border-color: #059669 !important;
+    color: #059669 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .badge {
+    border: 1px solid #999 !important;
+  }
 }

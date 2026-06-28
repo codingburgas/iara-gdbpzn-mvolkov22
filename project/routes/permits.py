@@ -20,32 +20,22 @@ def list_permits():
 
     valid_filters = ('pending', 'active', 'inactive', 'expired', 'revoked', 'rejected')
 
-    if g.user.role == 'inspector':
+    if g.user.role in ('inspector', 'admin'):
         query = PermitModel.query
-        if status_filter and status_filter in valid_filters:
-            query = query.filter_by(status=status_filter)
-        if search:
-            query = query.join(VesselModel).filter(
-                db.or_(
-                    PermitModel.permit_number.ilike(f'%{search}%'),
-                    VesselModel.cfr_number.ilike(f'%{search}%'),
-                    VesselModel.marking.ilike(f'%{search}%'),
-                )
-            )
-        permits = query.order_by(PermitModel.created_at.desc()).all()
     else:
         query = PermitModel.query.filter_by(holder_id=g.user.id)
-        if status_filter and status_filter in valid_filters:
-            query = query.filter_by(status=status_filter)
-        if search:
-            query = query.join(VesselModel).filter(
-                db.or_(
-                    PermitModel.permit_number.ilike(f'%{search}%'),
-                    VesselModel.cfr_number.ilike(f'%{search}%'),
-                    VesselModel.marking.ilike(f'%{search}%'),
-                )
+
+    if status_filter and status_filter in valid_filters:
+        query = query.filter_by(status=status_filter)
+    if search:
+        query = query.join(VesselModel).filter(
+            db.or_(
+                PermitModel.permit_number.ilike(f'%{search}%'),
+                VesselModel.cfr_number.ilike(f'%{search}%'),
+                VesselModel.marking.ilike(f'%{search}%'),
             )
-        permits = query.order_by(PermitModel.created_at.desc()).all()
+        )
+    permits = query.order_by(PermitModel.created_at.desc()).all()
 
     return render_template('permits/list.html', user=g.user, permits=permits, current_filter=status_filter, search=search)
 

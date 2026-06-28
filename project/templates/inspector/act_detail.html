@@ -127,14 +127,14 @@
 
     <div class="form-actions">
         {% if act.status == 'confirmed' %}
-        <form method="POST" action="{{ url_for('inspectorBp.resolve_act', act_id=act.id) }}" style="display:inline">
+        <form method="POST" action="{{ url_for('inspectorBp.resolve_act', act_id=act.id) }}" class="inline-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn-action btn-approve"
                     onclick="return confirm('Отбелязване на акт {{ act.act_number }} като решен?')">
                 Отбележи като решен
             </button>
         </form>
-        <form method="POST" action="{{ url_for('inspectorBp.cancel_act', act_id=act.id) }}" style="display:inline">
+        <form method="POST" action="{{ url_for('inspectorBp.cancel_act', act_id=act.id) }}" class="inline-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn-action btn-reject"
                     onclick="return confirm('Отмяна на акт {{ act.act_number }}?')">

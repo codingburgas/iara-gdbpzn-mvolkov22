@@ -11,7 +11,7 @@
 
     <div class="admin-header">
         <h1>Админ панел</h1>
-        <span style="font-size:0.875rem;color:#6b7280">Управление на заявки и потребители</span>
+        <span class="admin-subtitle">Управление на заявки и потребители</span>
     </div>
 
     <div class="stats-grid">
@@ -189,8 +189,8 @@
 
     <!-- Permits tab -->
     <div id="tab-permits" class="tab-content hidden">
-        <div class="page-header-between" style="margin-bottom:1rem">
-            <h3 style="margin:0">Чакащи заявки за разрешителни</h3>
+        <div class="page-header-between admin-tab-header">
+            <h3>Чакащи заявки за разрешителни</h3>
             <a href="{{ url_for('permitsBp.list_permits') }}" class="btn-action btn-approve">Виж всички</a>
         </div>
         {% if pending_permits %}
@@ -304,8 +304,8 @@
 
     <!-- Fines tab -->
     <div id="tab-fines" class="tab-content hidden">
-        <div class="page-header-between" style="margin-bottom:1rem">
-            <h3 style="margin:0">Глоби</h3>
+        <div class="page-header-between admin-tab-header">
+            <h3>Глоби</h3>
             <a href="{{ url_for('adminBp.list_fines') }}" class="btn-action btn-approve">Виж всички</a>
         </div>
         {% if recent_fines %}
@@ -370,8 +370,8 @@
 
     <!-- Acts tab -->
     <div id="tab-acts" class="tab-content hidden">
-        <div class="page-header-between" style="margin-bottom:1rem">
-            <h3 style="margin:0">Актове за проверка</h3>
+        <div class="page-header-between admin-tab-header">
+            <h3>Актове за проверка</h3>
             <a href="{{ url_for('adminBp.list_acts') }}" class="btn-action btn-approve">Виж всички</a>
         </div>
         {% if recent_acts %}
@@ -453,11 +453,11 @@
                     <td class="actions-cell">
                         <a href="{{ url_for('ticket_receipt', ticket_id=ticket.id) }}" class="btn-action btn-approve">Чек</a>
                         {% if ticket.status == 'pending' %}
-                        <form method="POST" action="{{ url_for('approve_ticket', ticket_id=ticket.id) }}" style="display:inline">
+                        <form method="POST" action="{{ url_for('approve_ticket', ticket_id=ticket.id) }}" class="inline-form">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn-action btn-approve">Одобри</button>
                         </form>
-                        <form method="POST" action="{{ url_for('reject_ticket', ticket_id=ticket.id) }}" style="display:inline">
+                        <form method="POST" action="{{ url_for('reject_ticket', ticket_id=ticket.id) }}" class="inline-form">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn-action btn-reject" onclick="return confirm('Отхвърляне на заявлението?')">Отхвърли</button>
                         </form>
@@ -475,11 +475,11 @@
 
     <!-- Trace tab -->
     <div id="tab-trace" class="tab-content hidden">
-        <div class="page-header-between" style="margin-bottom:1rem">
-            <h3 style="margin:0">Проследяване на рибата</h3>
+        <div class="page-header-between admin-tab-header">
+            <h3>Проследяване на рибата</h3>
             <a href="{{ url_for('traceBp.index') }}" class="btn-action btn-approve">Към проследяването</a>
         </div>
-        <div class="stats-grid" style="margin-bottom:1.5rem">
+        <div class="stats-grid mb-lg">
             <div class="stat-card">
                 <div class="stat-number approved">{{ stats.landings|default(0) }}</div>
                 <div class="stat-label">Разтоварвания</div>
@@ -560,13 +560,41 @@ function toggleNote(id) {
     el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    const approvedFilter = "{{ approved_filter|default('') }}";
-    if (approvedFilter !== '') {
-        const btns = Array.from(document.querySelectorAll('.tab'));
-        const approvedBtn = btns.find(b => b.textContent.toLowerCase().includes('одобрени'));
-        if (approvedBtn) approvedBtn.click();
+function activateTabByFilter() {
+    const params = new URLSearchParams(window.location.search);
+    const btns = Array.from(document.querySelectorAll('.tab'));
+
+    if (params.has('approved_filter') && params.get('approved_filter') !== '') {
+        const btn = btns.find(b => b.textContent.toLowerCase().includes('одобрени'));
+        if (btn) { btn.click(); return; }
     }
-});
+    if (params.has('ticket_filter') && params.get('ticket_filter') !== '') {
+        const btn = btns.find(b => b.textContent.includes('Билети'));
+        if (btn) { btn.click(); return; }
+    }
+    if (params.has('current_filter') || params.has('status')) {
+        const filter = params.get('current_filter') || params.get('status');
+        if (filter) {
+            const tabMap = {
+                'pending': 'Разрешителни',
+                'active': 'Разрешителни',
+                'expired': 'Разрешителни',
+                'revoked': 'Разрешителни',
+                'rejected': 'Разрешителни',
+                'paid': 'Глоби',
+                'confirmed': 'Актове',
+                'resolved': 'Актове',
+                'cancelled': 'Актове'
+            };
+            const tabName = tabMap[filter];
+            if (tabName) {
+                const btn = btns.find(b => b.textContent.includes(tabName));
+                if (btn) btn.click();
+            }
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', activateTabByFilter);
 </script>
 {% endblock %}

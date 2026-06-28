@@ -11,6 +11,8 @@
         <h1>Разрешителни</h1>
         {% if user.role == 'user' %}
         <a href="{{ url_for('permitsBp.request_permit') }}" class="btn-action btn-approve">+ Заяви разрешително</a>
+        {% elif user.role == 'admin' %}
+        <a href="{{ url_for('permitsBp.issue_permit') }}" class="btn-action btn-approve">+ Издай разрешително</a>
         {% endif %}
     </div>
 
@@ -25,9 +27,9 @@
         <a href="{{ url_for('permitsBp.list_permits', status='rejected') }}" class="filter-btn {% if current_filter == 'rejected' %}active{% endif %}">Отхвърлени</a>
     </div>
 
-    <div class="filter-bar" style="margin-top:0.5rem">
-        <form method="GET" action="{{ url_for('permitsBp.list_permits') }}" style="display:flex;gap:0.5rem;width:100%">
-            <input type="text" name="search" value="{{ search or '' }}" placeholder="Търси по номер, кораб..." style="flex:1;padding:0.5rem;border:1px solid #cbd5e1;border-radius:6px">
+    <div class="filter-bar">
+        <form method="GET" action="{{ url_for('permitsBp.list_permits') }}" class="filter-form">
+            <input type="text" name="search" value="{{ search or '' }}" placeholder="Търси по номер, кораб...">
             {% if current_filter %}<input type="hidden" name="status" value="{{ current_filter }}">{% endif %}
             <button type="submit" class="btn-action btn-approve">Търси</button>
             {% if search %}<a href="{{ url_for('permitsBp.list_permits') }}" class="btn-action btn-reject">Изчисти</a>{% endif %}

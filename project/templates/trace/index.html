@@ -8,17 +8,15 @@
 
 {% block content %}
 <div class="content-wrap">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap">
+  <div class="trace-header">
     <div>
-      <h1 style="margin:0">Проследяване на рибата</h1>
-      <p style="margin:0.25rem 0 0 0;color:#6b7280;font-size:0.85rem">
-        Пътят на рибата от кораба до магазина &mdash; разтоварвания, партиди и движение между обекти.
-      </p>
+      <h1>Проследяване на рибата</h1>
+      <p class="trace-subtitle">Пътят на рибата от кораба до магазина &mdash; разтоварвания, партиди и движение между обекти.</p>
     </div>
-    <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+    <div class="trace-actions">
       <a href="{{ url_for('traceBp.create_location') }}" class="btn-action btn-approve">Нов обект</a>
       {% if user.role in ('user', 'admin') %}
-      <a href="{{ url_for('traceBp.create_landing') }}" class="btn btn-primary">Ново разтоварване</a>
+      <a href="{{ url_for('traceBp.create_landing') }}" class="btn-primary">Ново разтоварване</a>
       {% endif %}
     </div>
   </div>

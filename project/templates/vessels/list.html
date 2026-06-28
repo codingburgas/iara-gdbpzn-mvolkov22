@@ -12,9 +12,9 @@
         <a href="{{ url_for('vessels.add_vessel') }}" class="back-link">Добави кораб</a>
     </div>
 
-    <div class="filter-bar" style="margin-bottom:1rem">
-        <form method="GET" action="{{ url_for('vessels.list_vessels') }}" style="display:flex;gap:0.5rem;width:100%">
-            <input type="text" name="search" value="{{ search or '' }}" placeholder="Търси по CFR, маркировка, позивна..." style="flex:1;padding:0.5rem;border:1px solid #cbd5e1;border-radius:6px">
+    <div class="filter-bar">
+        <form method="GET" action="{{ url_for('vessels.list_vessels') }}" class="filter-form">
+            <input type="text" name="search" value="{{ search or '' }}" placeholder="Търси по CFR, маркировка, позивна...">
             <button type="submit" class="btn-action btn-approve">Търси</button>
             {% if search %}<a href="{{ url_for('vessels.list_vessels') }}" class="btn-action btn-reject">Изчисти</a>{% endif %}
         </form>

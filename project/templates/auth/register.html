@@ -10,10 +10,11 @@
     <div class="auth-container">
         <div class="auth-header">
             <div class="auth-title">Регистрация</div>
+            <div class="auth-subtitle">Създайте акаунт за достъп до системата</div>
         </div>
 
         <div class="auth-card">
-            <form method="POST" action="{{ url_for('auth.register') }}">
+            <form method="POST" action="{{ url_for('auth.register') }}" class="auth-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <div class="section-label">Лична информация</div>
@@ -26,7 +27,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="identifier">ЕГН / ЕИК*</label>
-                        <input type="text" id="identifier" name="identifier" placeholder="0000000000"  maxlength="13" required>
+                        <input type="text" id="identifier" name="identifier" placeholder="0000000000" maxlength="13" required>
                     </div>
                     <div class="form-group">
                         <label for="phone">Телефон*</label>

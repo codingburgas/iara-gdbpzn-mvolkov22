@@ -20,9 +20,9 @@
         <a href="{{ url_for('inspectorBp.list_acts', status='cancelled') }}" class="filter-btn {% if current_filter == 'cancelled' %}active{% endif %}">Отменени</a>
     </div>
 
-    <div class="filter-bar" style="margin-top:0.5rem">
-        <form method="GET" action="{{ url_for('inspectorBp.list_acts') }}" style="display:flex;gap:0.5rem;width:100%">
-            <input type="text" name="search" value="{{ search or '' }}" placeholder="Търси по номер, кораб..." style="flex:1;padding:0.5rem;border:1px solid #cbd5e1;border-radius:6px">
+    <div class="filter-bar">
+        <form method="GET" action="{{ url_for('inspectorBp.list_acts') }}" class="filter-form">
+            <input type="text" name="search" value="{{ search or '' }}" placeholder="Търси по номер, кораб...">
             {% if current_filter %}<input type="hidden" name="status" value="{{ current_filter }}">{% endif %}
             <button type="submit" class="btn-action btn-approve">Търси</button>
             {% if search %}<a href="{{ url_for('inspectorBp.list_acts') }}" class="btn-action btn-reject">Изчисти</a>{% endif %}

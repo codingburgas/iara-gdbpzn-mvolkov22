@@ -87,8 +87,8 @@
     {% endif %}
 
     {% if fine.status == 'approved' or fine.status == 'pending' %}
-    <div style="text-align:center;margin-top:1.5rem">
-        <a href="{{ url_for('pay_fine', fine_id=fine.id) }}" class="btn btn-primary" style="padding:0.75rem 2.5rem;font-size:1rem">Плати глобата</a>
+    <div class="form-actions" style="justify-content:center">
+        <a href="{{ url_for('pay_fine', fine_id=fine.id) }}" class="btn btn-primary btn-pay">Плати глобата</a>
     </div>
     {% endif %}
 </div>
