@@ -28,6 +28,7 @@ with app.app_context():
     db.create_all()
 
 # register blueprints
+csrf.exempt(authBp)
 app.register_blueprint(authBp, url_prefix='/auth')
 app.register_blueprint(adminBp, url_prefix='/admin')
 app.register_blueprint(vesselsBp, url_prefix='/vessels')
