@@ -5,7 +5,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.image import Image
 from kivy.uix.widget import Widget
 from kivy.metrics import dp
-from core import API, api_get, BLUE, GREEN, RED, GRAY, sess, _user, GradBtn
+from core import API, api_get, api_post, BLUE, GREEN, RED, GRAY, sess, _user, GradBtn
 
 
 class LoginScreen(Screen):
@@ -69,10 +69,15 @@ class RegisterScreen(Screen):
         if pw != pw2: self.err.text = 'Паролите не съвпадат'; return
         if len(pw) < 6: self.err.text = 'Паролата трябва да е поне 6 символа'; return
         try:
-            r = sess.post(f'{API}/auth/register', data={'email': e, 'password': pw, 'password2': pw2, 'full_name': fn, 'identifier': idf, 'phone': self.ph_i.text.strip()}, allow_redirects=False, timeout=10)
-            if r.status_code in (200, 302):
-                me = api_get('/me'); self.err.text = ''
-                if me: _user.update(me)
-                self.manager.current = 'inspector_dashboard' if me and me.get('role') == 'inspector' else 'home'
-            else: self.err.text = f'Грешка: {r.status_code}'
+            r = api_post('/register', {
+                'email': e, 'password': pw, 'password2': pw2,
+                'full_name': fn, 'identifier': idf, 'phone': self.ph_i.text.strip(),
+            })
+            if r.status_code == 201:
+                data = r.json()
+                _user.update(data.get('user', {}))
+                self.manager.current = 'inspector_dashboard' if _user.get('role') == 'inspector' else 'home'
+            else:
+                body = r.json() if r.headers.get('content-type','').startswith('application/json') else {}
+                self.err.text = body.get('error', f'Грешка: {r.status_code}')
         except: self.err.text = 'Няма връзка със сървъра'

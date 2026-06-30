@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, session, g
-from models.models import db, UserModel, VesselModel, PermitModel, InspectionAct, Fine, FishBatch, BatchMovement, TraceLocation
+from models.models import db, UserModel, VesselModel, PermitModel, InspectionAct, Fine, FishBatch, BatchMovement, TraceLocation, FishingTicket, FishingLogEntry, CatchEntry, FishLanding
+from datetime import date, datetime, timedelta
 
 apiBp = Blueprint('apiBp', __name__)
 
@@ -34,6 +35,53 @@ def me():
         'identifier': user.identifier,
         'phone': user.phone,
     })
+
+
+@apiBp.route('/register', methods=['POST'])
+def api_register():
+    data = request.get_json(silent=True) or {}
+    email = data.get('email', '').strip()
+    password = data.get('password', '')
+    password2 = data.get('password2', '')
+    full_name = data.get('full_name', '').strip()
+    identifier = data.get('identifier', '').strip()
+    phone = data.get('phone', '').strip()
+
+    if not all([email, password, password2, full_name, identifier]):
+        return jsonify({'error': 'Попълнете всички задължителни полета'}), 400
+    if password != password2:
+        return jsonify({'error': 'Паролите не съвпадат'}), 400
+    if len(password) < 6:
+        return jsonify({'error': 'Паролата трябва да е поне 6 символа'}), 400
+    if UserModel.query.filter_by(email=email).first():
+        return jsonify({'error': 'Акаунт с този имейл вече съществува'}), 400
+    if UserModel.query.filter_by(identifier=identifier).first():
+        return jsonify({'error': 'Акаунт с това ЕГН/ЕИК вече съществува'}), 400
+
+    from validators import validate_identifier, validate_phone, validate_password_strength
+    valid, msg = validate_password_strength(password)
+    if not valid:
+        return jsonify({'error': msg}), 400
+    valid, msg = validate_identifier(identifier)
+    if not valid:
+        return jsonify({'error': msg}), 400
+    valid, msg = validate_phone(phone)
+    if not valid:
+        return jsonify({'error': msg}), 400
+
+    try:
+        user = UserModel(email=email, full_name=full_name, identifier=identifier, phone=phone or None)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        session['user_id'] = user.id
+        session['role'] = user.role
+        return jsonify({'ok': True, 'user': {
+            'id': user.id, 'email': user.email, 'full_name': user.full_name,
+            'role': user.role, 'identifier': user.identifier, 'phone': user.phone,
+        }}), 201
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
 
 
 @apiBp.route('/vessels')
@@ -425,6 +473,10 @@ def batch_detail(batch_id):
         return jsonify({'error': 'unauthorized'}), 401
 
     batch = FishBatch.query.get_or_404(batch_id)
+    vessel = None
+    if batch.landing and batch.landing.log_entry and batch.landing.log_entry.vessel:
+        v = batch.landing.log_entry.vessel
+        vessel = {'id': v.id, 'cfr_number': v.cfr_number, 'marking': v.marking}
     return jsonify({
         'id': batch.id,
         'batch_number': batch.batch_number,
@@ -432,6 +484,7 @@ def batch_detail(batch_id):
         'quantity_kg': batch.quantity_kg,
         'notes': batch.notes,
         'created_at': batch.created_at.isoformat() if batch.created_at else None,
+        'vessel': vessel,
         'landing': {
             'id': batch.landing.id,
             'landing_date': batch.landing.landing_date.isoformat() if batch.landing.landing_date else None,
@@ -446,4 +499,315 @@ def batch_detail(batch_id):
             'to_location': m.to_location.name if m.to_location else None,
             'notes': m.notes,
         } for m in batch.movements],
+    })
+
+
+@apiBp.route('/trace/locations')
+def location_list():
+    user = require_inspector()
+    if not user:
+        return jsonify({'error': 'unauthorized'}), 401
+
+    location_type = request.args.get('type')
+    query = TraceLocation.query.filter_by(is_active=True)
+    if location_type and location_type in ('shop', 'warehouse', 'truck'):
+        query = query.filter_by(location_type=location_type)
+    locations = query.order_by(TraceLocation.name).all()
+    return jsonify([{
+        'id': l.id,
+        'name': l.name,
+        'type': l.location_type,
+        'address': l.address or '',
+        'owner_name': l.owner_name or '',
+        'is_active': l.is_active,
+    } for l in locations])
+
+
+@apiBp.route('/trace/locations/<int:location_id>')
+def location_detail(location_id):
+    user = require_inspector()
+    if not user:
+        return jsonify({'error': 'unauthorized'}), 401
+
+    location = TraceLocation.query.get_or_404(location_id)
+    incoming = BatchMovement.query.filter_by(to_location_id=location_id).order_by(BatchMovement.arrival_date.desc()).all()
+    outgoing = BatchMovement.query.filter_by(from_location_id=location_id).order_by(BatchMovement.created_at.desc()).all()
+
+    type_names = {'shop': 'Магазин', 'warehouse': 'Склад', 'truck': 'Хладилен камион'}
+    return jsonify({
+        'id': location.id,
+        'name': location.name,
+        'type': location.location_type,
+        'type_label': type_names.get(location.location_type, location.location_type),
+        'address': location.address or '',
+        'owner_name': location.owner_name or '',
+        'license_number': location.license_number or '',
+        'contact_phone': location.contact_phone or '',
+        'is_active': location.is_active,
+        'incoming': [{
+            'id': m.id,
+            'batch_id': m.batch_id,
+            'batch_number': m.batch.batch_number,
+            'species': m.batch.species,
+            'quantity_kg': m.batch.quantity_kg,
+            'movement_type': m.movement_type,
+            'from_location': m.from_location.name if m.from_location else None,
+            'arrival_date': m.arrival_date.isoformat() if m.arrival_date else None,
+            'notes': m.notes or '',
+        } for m in incoming],
+        'outgoing': [{
+            'id': m.id,
+            'batch_id': m.batch_id,
+            'batch_number': m.batch.batch_number,
+            'species': m.batch.species,
+            'quantity_kg': m.batch.quantity_kg,
+            'movement_type': m.movement_type,
+            'to_location': m.to_location.name if m.to_location else None,
+            'departure_date': m.departure_date.isoformat() if m.departure_date else None,
+            'notes': m.notes or '',
+        } for m in outgoing],
+    })
+
+
+@apiBp.route('/tickets')
+def ticket_list():
+    user = require_auth()
+    if not user:
+        return jsonify({'error': 'unauthorized'}), 401
+    tickets = FishingTicket.query.filter_by(user_id=user.id).order_by(FishingTicket.created_at.desc()).all()
+    return jsonify([{
+        'id': t.id,
+        'receipt_number': t.receipt_number,
+        'ticket_type': t.ticket_type,
+        'period': t.period,
+        'price': t.price,
+        'status': t.status,
+        'valid_from': t.valid_from.isoformat() if t.valid_from else None,
+        'valid_until': t.valid_until.isoformat() if t.valid_until else None,
+        'created_at': t.created_at.isoformat() if t.created_at else None,
+    } for t in tickets])
+
+
+@apiBp.route('/tickets/buy', methods=['POST'])
+def ticket_buy():
+    user = require_auth()
+    if not user:
+        return jsonify({'error': 'unauthorized'}), 401
+
+    ticket_type = request.json.get('ticket_type')
+    period = request.json.get('period')
+    telk_number = request.json.get('telk_number', '').strip()
+
+    valid_periods = {'1 седмица': 7, '1 месец': 30, '6 месеца': 180, '1 година': 365}
+    prices = {
+        'standard': {'1 седмица': 6.14, '1 месец': 8.18, '6 месеца': 15.34, '1 година': 25.56},
+        'reduced': {'1 седмица': 3.07, '1 месец': 4.09, '6 месеца': 7.67, '1 година': 12.78},
+        'disabled': {'1 седмица': 0, '1 месец': 0, '6 месеца': 0, '1 година': 0},
+    }
+
+    if ticket_type not in ('standard', 'reduced', 'disabled'):
+        return jsonify({'error': 'invalid ticket_type'}), 400
+    if period not in valid_periods:
+        return jsonify({'error': 'invalid period'}), 400
+    if ticket_type == 'disabled' and not telk_number:
+        return jsonify({'error': 'telk_number required for disabled tickets'}), 400
+
+    price = prices[ticket_type][period]
+    today = date.today()
+    valid_until = today + timedelta(days=valid_periods[period])
+
+    last_ticket = FishingTicket.query.order_by(FishingTicket.id.desc()).first()
+    next_num = (last_ticket.id + 1) if last_ticket else 1
+    receipt_number = f'TKT-{today.strftime("%Y%m%d")}-{next_num:04d}'
+
+    is_disabled = ticket_type == 'disabled'
+    ticket = FishingTicket(
+        user_id=user.id,
+        ticket_type=ticket_type,
+        period=period,
+        price=price,
+        receipt_number=receipt_number,
+        telk_number=telk_number if telk_number else None,
+        valid_from=today if not is_disabled else None,
+        valid_until=valid_until if not is_disabled else None,
+        status='pending' if is_disabled else 'active',
+        paid_at=db.func.now() if not is_disabled else None,
+    )
+    db.session.add(ticket)
+    db.session.commit()
+
+    return jsonify({
+        'id': ticket.id,
+        'receipt_number': receipt_number,
+        'status': ticket.status,
+        'price': price,
+    }), 201
+
+
+@apiBp.route('/tickets/<int:ticket_id>')
+def ticket_detail(ticket_id):
+    user = require_auth()
+    if not user:
+        return jsonify({'error': 'unauthorized'}), 401
+    ticket = FishingTicket.query.get_or_404(ticket_id)
+    if ticket.user_id != user.id:
+        return jsonify({'error': 'forbidden'}), 403
+    type_labels = {'standard': 'Стандартен', 'reduced': 'Намален', 'disabled': 'Инвалиден'}
+    status_labels = {'active': 'Активен', 'expired': 'Изтекъл', 'cancelled': 'Анулиран', 'pending': 'Чака одобрение'}
+    return jsonify({
+        'id': ticket.id,
+        'receipt_number': ticket.receipt_number,
+        'ticket_type': ticket.ticket_type,
+        'ticket_type_label': type_labels.get(ticket.ticket_type, ticket.ticket_type),
+        'period': ticket.period,
+        'price': ticket.price,
+        'status': ticket.status,
+        'status_label': status_labels.get(ticket.status, ticket.status),
+        'telk_number': ticket.telk_number or '',
+        'valid_from': ticket.valid_from.isoformat() if ticket.valid_from else None,
+        'valid_until': ticket.valid_until.isoformat() if ticket.valid_until else None,
+        'created_at': ticket.created_at.isoformat() if ticket.created_at else None,
+        'paid_at': ticket.paid_at.isoformat() if ticket.paid_at else None,
+    })
+
+
+@apiBp.route('/tickets/<int:ticket_id>/cancel', methods=['POST'])
+def ticket_cancel(ticket_id):
+    user = require_auth()
+    if not user:
+        return jsonify({'error': 'unauthorized'}), 401
+    ticket = FishingTicket.query.get_or_404(ticket_id)
+    if ticket.user_id != user.id:
+        return jsonify({'error': 'forbidden'}), 403
+    if ticket.status not in ('active', 'pending'):
+        return jsonify({'error': 'ticket cannot be cancelled'}), 400
+    ticket.status = 'cancelled'
+    db.session.commit()
+    return jsonify({'status': 'cancelled'})
+
+
+@apiBp.route('/logbook')
+def logbook_list():
+    user = require_auth()
+    if not user:
+        return jsonify({'error': 'unauthorized'}), 401
+
+    query = FishingLogEntry.query
+    if user.role == 'user':
+        query = query.filter_by(created_by=user.id)
+    query = query.order_by(FishingLogEntry.created_at.desc()).all()
+
+    return jsonify([{
+        'id': e.id,
+        'start_datetime': e.start_datetime.isoformat() if e.start_datetime else None,
+        'end_datetime': e.end_datetime.isoformat() if e.end_datetime else None,
+        'start_location': e.start_location or '',
+        'end_location': e.end_location or '',
+        'gear_used': e.gear_used or '',
+        'status': e.status,
+        'vessel': {
+            'id': e.vessel.id,
+            'cfr_number': e.vessel.cfr_number,
+            'marking': e.vessel.marking,
+        } if e.vessel else None,
+        'catches': [{
+            'species': c.species,
+            'quantity_kg': c.quantity_kg,
+            'quantity_pcs': c.quantity_pcs or 0,
+            'notes': c.notes or '',
+        } for c in e.catches],
+        'created_at': e.created_at.isoformat() if e.created_at else None,
+    } for e in query])
+
+
+@apiBp.route('/logbook', methods=['POST'])
+def logbook_create():
+    user = require_auth()
+    if not user:
+        return jsonify({'error': 'unauthorized'}), 401
+
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'invalid JSON'}), 400
+
+    vessel_id = data.get('vessel_id')
+    if vessel_id:
+        vessel = VesselModel.query.get(int(vessel_id))
+        if not vessel:
+            return jsonify({'error': 'vessel not found'}), 404
+
+    start_dt = None
+    if data.get('start_datetime'):
+        try:
+            start_dt = datetime.fromisoformat(data['start_datetime'])
+        except ValueError:
+            start_dt = datetime.strptime(data['start_datetime'], '%Y-%m-%d %H:%M')
+
+    end_dt = None
+    if data.get('end_datetime'):
+        try:
+            end_dt = datetime.fromisoformat(data['end_datetime'])
+        except ValueError:
+            end_dt = datetime.strptime(data['end_datetime'], '%Y-%m-%d %H:%M')
+
+    entry = FishingLogEntry(
+        vessel_id=int(vessel_id) if vessel_id else None,
+        created_by=user.id,
+        start_datetime=start_dt or datetime.now(),
+        end_datetime=end_dt,
+        start_location=data.get('start_location', ''),
+        end_location=data.get('end_location', ''),
+        gear_used=data.get('gear_used', ''),
+        notes=data.get('notes', ''),
+        status=data.get('status', 'submitted'),
+    )
+    db.session.add(entry)
+    db.session.flush()
+
+    for c in data.get('catches', []):
+        if c.get('species') and c.get('quantity_kg'):
+            catch = CatchEntry(
+                log_entry_id=entry.id,
+                species=c['species'],
+                quantity_kg=float(c['quantity_kg']),
+                quantity_pcs=int(c['quantity_pcs']) if c.get('quantity_pcs') else None,
+                notes=c.get('notes', ''),
+            )
+            db.session.add(catch)
+
+    db.session.commit()
+    return jsonify({'id': entry.id}), 201
+
+
+@apiBp.route('/logbook/<int:log_id>')
+def logbook_detail(log_id):
+    user = require_auth()
+    if not user:
+        return jsonify({'error': 'unauthorized'}), 401
+    entry = FishingLogEntry.query.get_or_404(log_id)
+    if user.role == 'user' and entry.created_by != user.id:
+        return jsonify({'error': 'forbidden'}), 403
+
+    return jsonify({
+        'id': entry.id,
+        'start_datetime': entry.start_datetime.isoformat() if entry.start_datetime else None,
+        'end_datetime': entry.end_datetime.isoformat() if entry.end_datetime else None,
+        'start_location': entry.start_location or '',
+        'end_location': entry.end_location or '',
+        'gear_used': entry.gear_used or '',
+        'notes': entry.notes or '',
+        'status': entry.status,
+        'vessel': {
+            'id': entry.vessel.id,
+            'cfr_number': entry.vessel.cfr_number,
+            'marking': entry.vessel.marking,
+        } if entry.vessel else None,
+        'catches': [{
+            'id': c.id,
+            'species': c.species,
+            'quantity_kg': c.quantity_kg,
+            'quantity_pcs': c.quantity_pcs or 0,
+            'notes': c.notes or '',
+        } for c in entry.catches],
+        'created_at': entry.created_at.isoformat() if entry.created_at else None,
     })

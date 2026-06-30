@@ -55,7 +55,12 @@ def back_btn(screen):
 
 
 def bottom_tabs(active, screen):
-    tabs = [('Главная', 'inspector_dashboard'), ('Профил', 'profile')]
+    from core import _user
+    role = _user.get('role', 'user')
+    if role == 'inspector':
+        tabs = [('Главная', 'inspector_dashboard'), ('Профил', 'profile')]
+    else:
+        tabs = [('Главная', 'home'), ('Профил', 'profile')]
     b = BoxLayout(size_hint_y=None, height=dp(54), spacing=dp(0))
     colored(b, (0.05, 0.1, 0.2, 1))
     for label, key in tabs:

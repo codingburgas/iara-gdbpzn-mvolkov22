@@ -129,7 +129,7 @@ class Fine(db.Model):
 
 class FishingLogEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    vessel_id = db.Column(db.Integer, db.ForeignKey('vessel_model.id'), nullable=False)
+    vessel_id = db.Column(db.Integer, db.ForeignKey('vessel_model.id'), nullable=True)
     permit_id = db.Column(db.Integer, db.ForeignKey('permit_model.id'), nullable=True)
     created_by = db.Column(db.Integer, db.ForeignKey('user_model.id'), nullable=False)
 

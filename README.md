@@ -24,23 +24,26 @@
 ## Структура на проекта
 
 ```bash
-project/
-├── app.py              # Flask уеб приложение
-├── templates/          # HTML шаблони
-├── static/             # Статични файлове
-│   ├── css/            # Стилове
-│   ├── js/             # Скриптове
-│   └── images/         # Изображения и лога
-├── routes/             # API и уеб маршрути
-├── models/             # SQLAlchemy база данни модели
-├── database/           # Конфигурация на връзката с БД
-├── requirements.txt    # Зависимости за бекенда
-└── .env                # Локални променливи на средата
+project/                         # Flask уеб приложение
+├── app.py                       # Основен Flask файл
+├── validators.py                # Валидатори
+├── templates/                   # HTML шаблони
+├── static/                      # Статични файлове
+│   ├── css/                     # Стилове
+│   ├── js/                      # Скриптове
+│   └── images/                  # Изображения
+├── routes/                      # Уеб маршрути & JSON API
+├── models/                      # SQLAlchemy модели
+├── database/                    # DB конфигурация
+├── requirements.txt             # Python зависимости
+└── .env                         # Локални променливи на средата
 
-project-mobile/
-├── app.py              # Kivy мобилно приложение
-├── assets/             # Ресурси за мобилния интерфейс
-└── requirements.txt    # Зависимости за мобилното приложение
+project-mobile/                  # Kivy мобилно приложение
+├── app.py                       # Kivy App + ScreenManager
+├── core.py                      # API клиент, UI helpers, цветове
+├── assets/                      # Ресурси
+├── requirements.txt             # Python зависимости
+└── screens/                     # Екрани (auth, user, inspector, profile)
 ```
 
 ---

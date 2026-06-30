@@ -19,7 +19,10 @@ from screens.inspector import (
     ActListScreen, ActCreateScreen, ActDetailScreen,
     FineListScreen, FineCreateScreen,
     TraceSearchScreen, BatchDetailScreen,
+    LocationListScreen, LocationDetailScreen,
 )
+from screens.user_tickets import TicketListScreen, TicketBuyScreen, TicketDetailScreen
+from screens.user_logbook import LogbookListScreen, LogbookCreateScreen, LogbookDetailScreen
 
 
 class IARAApp(App):
@@ -44,6 +47,14 @@ class IARAApp(App):
             FineCreateScreen(name='fine_create'),
             TraceSearchScreen(name='trace_search'),
             BatchDetailScreen(name='batch_detail'),
+            LocationListScreen(name='location_list'),
+            LocationDetailScreen(name='location_detail'),
+            TicketListScreen(name='ticket_list'),
+            TicketBuyScreen(name='ticket_buy'),
+            TicketDetailScreen(name='ticket_detail'),
+            LogbookListScreen(name='logbook_list'),
+            LogbookCreateScreen(name='logbook_create'),
+            LogbookDetailScreen(name='logbook_detail'),
         ]:
             sm.add_widget(screen)
         return sm

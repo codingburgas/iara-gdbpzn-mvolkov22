@@ -27,7 +27,8 @@ class InspectorDashboard(Screen):
         grid = BoxLayout(orientation='vertical', size_hint_y=None, spacing=dp(12), padding=[dp(15), dp(15)])
         grid.bind(minimum_height=grid.setter('height'))
         for txt, clr, sc in [('Кораби', BLUE, 'vessel_list'), ('Актове', ORANGE, 'act_list'),
-                              ('Глоби', RED, 'fine_list'), ('Проследимост', GREEN, 'trace_search')]:
+                              ('Глоби', RED, 'fine_list'), ('Проследимост', GREEN, 'trace_search'),
+                              ('Проверка на обекти', (0.4, 0.2, 0.6, 1), 'location_list')]:
             grid.add_widget(menu_card(txt, clr, lambda x, s=sc: setattr(self.manager, 'current', s)))
         sv.add_widget(grid)
         root.add_widget(sv)
@@ -368,13 +369,113 @@ class BatchDetailScreen(Screen):
         self.root.clear_widgets()
         data = api_get(f'/trace/batches/{bid}')
         if not data: self.root.add_widget(Label(text='Грешка', color=RED, size_hint_y=None, height=dp(40))); return
+        self.batch_vessel = data.get('vessel')
         self.root.add_widget(header_bar(f'Партида {data["batch_number"]}', GREEN))
         self.root.add_widget(Label(text=f'Вид: {data["species"]}  |  Количество: {data["quantity_kg"]} кг', font_size=dp(15), bold=True, color=BLUE, size_hint_y=None, height=dp(30)))
         landing = data.get('landing', {})
         if landing: self.root.add_widget(Label(text=f'Разтоварване: {landing.get("landing_date","")} — {landing.get("location","")}', size_hint_y=None, height=dp(24), color=(0.2, 0.2, 0.2, 1)))
+        vessel = data.get('vessel')
+        if vessel: self.root.add_widget(Label(text=f'Кораб: {vessel.get("marking","")} ({vessel.get("cfr_number","")})', size_hint_y=None, height=dp(24), color=BLUE, bold=True))
         if data.get('notes'): self.root.add_widget(Label(text=f'Бележки: {data["notes"]}', size_hint_y=None, height=dp(24), color=GRAY))
         self.root.add_widget(Label(text='Движения:', bold=True, color=GREEN, size_hint_y=None, height=dp(28)))
         for m in data.get('movements', []):
             self.root.add_widget(Label(text=f'{m.get("movement_type","")}  {m.get("from_location","?")} -> {m.get("to_location","?")}', size_hint_y=None, height=dp(22), color=(0.2, 0.2, 0.2, 1)))
             if m.get('arrival_date'): self.root.add_widget(Label(text=f'   Пристигане: {m["arrival_date"]}', size_hint_y=None, height=dp(18), color=GRAY))
         if not data.get('movements'): self.root.add_widget(Label(text='Няма движения', color=GRAY, size_hint_y=None, height=dp(22)))
+        if vessel:
+            self.root.add_widget(Widget(size_hint_y=None, height=dp(10)))
+            self.root.add_widget(GradBtn('НОВ АКТ ЗА ТОЗИ КОРАБ', ORANGE, (0.8, 0.4, 0.05, 1), on_press=self.create_act_for_vessel))
+
+    def create_act_for_vessel(self, _):
+        if self.batch_vessel:
+            self.manager.get_screen('act_create').select_vessel(self.batch_vessel['id'])
+            self.manager.current = 'act_create'
+
+
+class LocationListScreen(Screen):
+    def __init__(self, **kw):
+        super().__init__(**kw); self._back_to = 'inspector_dashboard'; self.build_ui()
+
+    def build_ui(self):
+        root = BoxLayout(orientation='vertical')
+        root.add_widget(header_bar('Проверка на обекти', (0.4, 0.2, 0.6, 1)))
+        top = BoxLayout(size_hint_y=None, height=dp(50), spacing=dp(8), padding=[dp(10), dp(5)])
+        self.spin = Spinner(text='Всички', values=('Всички', 'shop', 'warehouse', 'truck'), size_hint_x=1, size_hint_y=None, height=dp(40))
+        self.spin.bind(text=lambda s, _: self.load()); top.add_widget(self.spin); root.add_widget(top)
+        sv = ScrollView()
+        self.list = BoxLayout(orientation='vertical', size_hint_y=None, spacing=dp(4), padding=[dp(8), dp(4)])
+        self.list.bind(minimum_height=self.list.setter('height')); sv.add_widget(self.list); root.add_widget(sv)
+        root.add_widget(back_btn(self)); self.add_widget(root)
+
+    def on_enter(self): self.load()
+
+    def load(self):
+        self.list.clear_widgets()
+        s = f'?type={self.spin.text}' if self.spin.text != 'Всички' else ''
+        locs = api_get(f'/trace/locations{s}')
+        if not locs: self.list.add_widget(Label(text='Няма регистрирани обекти', color=GRAY, size_hint_y=None, height=dp(50))); return
+        type_labels = {'shop': 'Магазин', 'warehouse': 'Склад', 'truck': 'Хладилен камион'}
+        type_colors = {'shop': (0.2, 0.6, 0.2, 1), 'warehouse': (0.6, 0.4, 0.1, 1), 'truck': (0.2, 0.4, 0.6, 1)}
+        for l in locs:
+            box = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(64), padding=[dp(10), dp(6)])
+            colored(box, BG)
+            info = BoxLayout(orientation='vertical')
+            info.add_widget(Label(text=l['name'], bold=True, color=BLUE, size_hint_y=None, height=dp(26), halign='left'))
+            tl = type_labels.get(l['type'], l['type'])
+            info.add_widget(Label(text=f'{tl}  |  {l.get("address","")}', color=GRAY, size_hint_y=None, height=dp(20), halign='left'))
+            box.add_widget(info)
+            arrow = Button(text='>', size_hint=(0.12, 1), background_color=(0,0,0,0), color=type_colors.get(l['type'], GRAY), bold=True, font_size=dp(18))
+            lid = l['id']; arrow.bind(on_press=lambda x, i=lid: self.open_location(i))
+            box.add_widget(arrow); self.list.add_widget(box)
+
+    def open_location(self, lid):
+        self.manager.get_screen('location_detail').load(lid); self.manager.current = 'location_detail'
+
+
+class LocationDetailScreen(Screen):
+    def __init__(self, **kw):
+        super().__init__(**kw); self._back_to = 'location_list'; self.build_ui()
+
+    def build_ui(self):
+        sv = ScrollView()
+        self.root = BoxLayout(orientation='vertical', size_hint_y=None, spacing=dp(6), padding=[dp(15), dp(10)])
+        self.root.bind(minimum_height=self.root.setter('height'))
+        colored(self.root, WHITE); sv.add_widget(self.root)
+        main = BoxLayout(orientation='vertical'); main.add_widget(sv); main.add_widget(back_btn(self)); self.add_widget(main)
+
+    def load(self, lid):
+        self.root.clear_widgets()
+        data = api_get(f'/trace/locations/{lid}')
+        if not data: self.root.add_widget(Label(text='Грешка', color=RED, size_hint_y=None, height=dp(40))); return
+        self.root.add_widget(header_bar(data['name'], (0.4, 0.2, 0.6, 1)))
+        for l, v in [('Тип', data.get('type_label','—')), ('Адрес', data.get('address','—')), ('Собственик', data.get('owner_name','—')), ('Лиценз', data.get('license_number','—')), ('Телефон', data.get('contact_phone','—'))]:
+            self.root.add_widget(Label(text=f'{l}: {v}', size_hint_y=None, height=dp(22), color=(0.2, 0.2, 0.2, 1)))
+        incoming = data.get('incoming', [])
+        outgoing = data.get('outgoing', [])
+        if incoming:
+            self.root.add_widget(Label(text='Входящи партиди:', bold=True, color=GREEN, size_hint_y=None, height=dp(28)))
+            for m in incoming:
+                box = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(40), padding=[dp(5), dp(2)])
+                colored(box, BG)
+                txt = f'{m["batch_number"]} — {m["species"]} ({m["quantity_kg"]} кг)\nот {m.get("from_location","?")} на {m.get("arrival_date","")[:10]}'
+                lbl = Label(text=txt, size_hint_x=0.8, size_hint_y=None, height=dp(36), color=(0.2, 0.2, 0.2, 1), halign='left')
+                box.add_widget(lbl)
+                arrow = Button(text='>', size_hint=(0.15, 1), background_color=(0,0,0,0), color=GREEN, bold=True, font_size=dp(16))
+                bid = m['batch_id']; arrow.bind(on_press=lambda x, i=bid: self.open_batch(i))
+                box.add_widget(arrow); self.root.add_widget(box)
+        if outgoing:
+            self.root.add_widget(Label(text='Изходящи партиди:', bold=True, color=ORANGE, size_hint_y=None, height=dp(28)))
+            for m in outgoing:
+                box = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(40), padding=[dp(5), dp(2)])
+                colored(box, BG)
+                txt = f'{m["batch_number"]} — {m["species"]} ({m["quantity_kg"]} кг)\nкъм {m.get("to_location","?")} на {m.get("departure_date","")[:10]}'
+                lbl = Label(text=txt, size_hint_x=0.8, size_hint_y=None, height=dp(36), color=(0.2, 0.2, 0.2, 1), halign='left')
+                box.add_widget(lbl)
+                arrow = Button(text='>', size_hint=(0.15, 1), background_color=(0,0,0,0), color=ORANGE, bold=True, font_size=dp(16))
+                bid = m['batch_id']; arrow.bind(on_press=lambda x, i=bid: self.open_batch(i))
+                box.add_widget(arrow); self.root.add_widget(box)
+        if not incoming and not outgoing:
+            self.root.add_widget(Label(text='Няма партиди на този обект', color=GRAY, size_hint_y=None, height=dp(30)))
+
+    def open_batch(self, bid):
+        self.manager.get_screen('batch_detail').load(bid); self.manager.current = 'batch_detail'
