@@ -51,8 +51,8 @@
                     <td class="text-truncate" title="{{ act.vessel.cfr_number }} / {{ act.vessel.marking }}">{{ act.vessel.cfr_number }} / {{ act.vessel.marking }}</td>
                     <td>{{ act.inspection_date.strftime('%d.%m.%Y') }}</td>
                     <td>
-                        {% set act_status = 'Чернова' if act.status == 'draft' else 'Изпратен' if act.status == 'submitted' else 'Потвърден' if act.status == 'confirmed' else 'Отменен' %}
-                        {% set status_class = 'status-pending' if act.status == 'draft' else 'status-active' if act.status == 'submitted' else 'status-approved' if act.status == 'confirmed' else 'status-revoked' %}
+                        {% set act_status = 'Чернова' if act.status == 'draft' else 'Изпратен' if act.status == 'submitted' else 'Потвърден' if act.status == 'confirmed' else 'Решен' if act.status == 'resolved' else 'Отменен' %}
+                        {% set status_class = 'status-pending' if act.status == 'draft' else 'status-active' if act.status == 'submitted' else 'status-confirmed' if act.status == 'confirmed' else 'status-resolved' if act.status == 'resolved' else 'status-revoked' %}
                         <span class="status {{ status_class }}">{{ act_status }}</span>
                     </td>
                     <td>

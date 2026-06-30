@@ -53,7 +53,7 @@
                     </td>
                     <td>
                         {% set astatus_label = 'Активен' if act.status == 'confirmed' else 'Решен' if act.status == 'resolved' else 'Отменен' %}
-                        {% set astatus_class = 'approved' if act.status == 'confirmed' else 'approved' if act.status == 'resolved' else 'rejected' %}
+                        {% set astatus_class = 'confirmed' if act.status == 'confirmed' else 'approved' if act.status == 'resolved' else 'rejected' %}
                         <span class="badge badge-{{ astatus_class }}">{{ astatus_label }}</span>
                     </td>
                     <td class="actions-cell">
@@ -79,7 +79,7 @@
                             <input type="hidden" name="reason" value="Отнето по акт {{ act.act_number }}">
                             <button type="submit" class="btn-action btn-reject"
                                     onclick="return confirm('Отнеми разрешително {{ act.related_permit.permit_number }} по акт {{ act.act_number }}?')">
-                                Отнеми разрешително
+                                Отнеми
                             </button>
                         </form>
                         {% endif %}

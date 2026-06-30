@@ -395,7 +395,7 @@
                     <td>{{ act.inspection_date.strftime('%d.%m.%Y') }}</td>
                     <td>
                         {% set alabel = 'Активен' if act.status == 'confirmed' else 'Решен' if act.status == 'resolved' else 'Отменен' %}
-                        {% set aclass = 'badge-approved' if act.status in ('confirmed', 'resolved') else 'badge-rejected' %}
+                        {% set aclass = 'badge-confirmed' if act.status == 'confirmed' else 'badge-approved' if act.status == 'resolved' else 'badge-rejected' %}
                         <span class="badge {{ aclass }}">{{ alabel }}</span>
                     </td>
                     <td class="actions-cell">

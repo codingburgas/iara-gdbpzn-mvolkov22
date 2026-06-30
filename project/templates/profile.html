@@ -415,7 +415,7 @@
                     <tbody>
                         {% for act in acts[:10] %}
                         {% set astatus_label = 'Чернова' if act.status == 'draft' else 'Изпратен' if act.status == 'submitted' else 'Потвърден' if act.status == 'confirmed' else 'Решен' if act.status == 'resolved' else 'Отменен' %}
-                        {% set astatus_class = 'pending' if act.status == 'draft' else 'approved' if act.status == 'submitted' else 'approved' if act.status in ('confirmed', 'resolved') else 'rejected' %}
+                        {% set astatus_class = 'pending' if act.status == 'draft' else 'approved' if act.status == 'submitted' else 'confirmed' if act.status == 'confirmed' else 'approved' if act.status == 'resolved' else 'rejected' %}
                         <tr>
                             <td><strong>{{ act.act_number }}</strong></td>
                             <td>{{ act.vessel.cfr_number }}</td>

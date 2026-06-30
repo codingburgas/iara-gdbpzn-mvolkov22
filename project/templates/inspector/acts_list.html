@@ -52,7 +52,7 @@
                     <td>{{ act.location or '—' }}</td>
                     <td>
                         {% set act_status = 'Активен' if act.status == 'confirmed' else 'Решен' if act.status == 'resolved' else 'Отменен' %}
-                        {% set status_class = 'status-approved' if act.status == 'confirmed' else 'status-approved' if act.status == 'resolved' else 'status-revoked' %}
+                        {% set status_class = 'status-confirmed' if act.status == 'confirmed' else 'status-resolved' if act.status == 'resolved' else 'status-revoked' %}
                         <span class="status {{ status_class }}">{{ act_status }}</span>
                     </td>
                     <td>

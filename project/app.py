@@ -11,6 +11,7 @@ from routes.permits import permitsApp as permitsApp
 from routes.inspector import inspectorApp as inspectorBp
 from routes.logbook import logbookApp as logbookBp
 from routes.trace import traceBp as traceBp
+from routes.api import apiBp
 from database import config
 from dotenv import load_dotenv
 
@@ -29,6 +30,7 @@ with app.app_context():
 
 # register blueprints
 csrf.exempt(authBp)
+csrf.exempt(apiBp)
 app.register_blueprint(authBp, url_prefix='/auth')
 app.register_blueprint(adminBp, url_prefix='/admin')
 app.register_blueprint(vesselsBp, url_prefix='/vessels')
@@ -36,6 +38,7 @@ app.register_blueprint(permitsApp, url_prefix='/permits')
 app.register_blueprint(inspectorBp, url_prefix='/inspector')
 app.register_blueprint(logbookBp, url_prefix='/logbook')
 app.register_blueprint(traceBp, url_prefix='/trace')
+app.register_blueprint(apiBp, url_prefix='/api')
 
 
 def expire_permits_job():

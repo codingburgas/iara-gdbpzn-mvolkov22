@@ -10,7 +10,7 @@
     <div class="page-header-between">
         <a href="{{ url_for('adminBp.index') if user.role == 'admin' else url_for('inspectorBp.list_acts') }}" class="back-link">Назад</a>
         <span class="badge
-            {% if act.status == 'confirmed' %}badge-approved
+            {% if act.status == 'confirmed' %}badge-confirmed
             {% elif act.status == 'resolved' %}badge-approved
             {% else %}badge-rejected{% endif %}">
             {% set act_status = 'Активен' if act.status == 'confirmed' else 'Решен' if act.status == 'resolved' else 'Отменен' %}

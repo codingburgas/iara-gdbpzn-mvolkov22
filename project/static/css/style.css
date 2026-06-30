@@ -533,6 +533,21 @@ tbody td {
     color: #059669;
 }
 
+.status-confirmed {
+    background: rgba(240, 192, 64, 0.15);
+    color: #b45309;
+}
+
+.status-resolved {
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+}
+
+.badge-confirmed {
+    background-color: rgba(240, 192, 64, 0.15);
+    color: #b45309;
+}
+
 .status-pending {
     background: rgba(240, 192, 64, 0.15);
     color: #b45309;

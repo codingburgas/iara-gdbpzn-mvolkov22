@@ -82,7 +82,7 @@
             </span>
             <span class="detail-value">
                 {{ act.inspection_date.strftime('%d.%m.%Y') }} —
-                <span class="badge badge-{{ 'approved' if act.status in ('confirmed', 'resolved') else 'rejected' }}">
+                <span class="badge badge-{{ 'confirmed' if act.status == 'confirmed' else 'approved' if act.status == 'resolved' else 'rejected' }}">
                     {{ 'Активен' if act.status == 'confirmed' else 'Решен' if act.status == 'resolved' else 'Отменен' }}
                 </span>
             </span>
